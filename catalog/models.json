@@ -1,0 +1,180 @@
+{
+  "models": [
+    {
+      "id": "airpods-pro-3",
+      "displayName": "Pro 3",
+      "kind": "earbuds",
+      "year": 2025,
+      "bleModelIds": [8231],
+      "colors": [
+        { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "bleColorCode": 0 }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
+      "assets": {
+        "glb": "models/airpods-pro-3.glb",
+        "caseClosed": "renders/airpods-pro-3/case-closed.webp",
+        "caseOpen": "renders/airpods-pro-3/case-open.webp",
+        "buds": "renders/airpods-pro-3/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-4",
+      "displayName": "Series 4",
+      "kind": "earbuds",
+      "year": 2024,
+      "bleModelIds": [8217],
+      "colors": [
+        { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "bleColorCode": 0 }
+      ],
+      "listeningModes": [],
+      "assets": {
+        "glb": "models/airpods-4.glb",
+        "caseClosed": "renders/airpods-4/case-closed.webp",
+        "caseOpen": "renders/airpods-4/case-open.webp",
+        "buds": "renders/airpods-4/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-4-anc",
+      "displayName": "Series 4 ANC",
+      "kind": "earbuds",
+      "year": 2024,
+      "bleModelIds": [8219],
+      "colors": [
+        { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "bleColorCode": 0 }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
+      "assets": {
+        "glb": "models/airpods-4-anc.glb",
+        "caseClosed": "renders/airpods-4-anc/case-closed.webp",
+        "caseOpen": "renders/airpods-4-anc/case-open.webp",
+        "buds": "renders/airpods-4-anc/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-max-2",
+      "displayName": "Max 2",
+      "kind": "over-ear",
+      "year": 2026,
+      "bleModelIds": [8239],
+      "colors": [
+        { "id": "midnight", "label": "Medianoche", "hex": "#1D212A", "bleColorCode": 0 },
+        { "id": "starlight", "label": "Blanco estelar", "hex": "#F0ECE1", "bleColorCode": 1 },
+        { "id": "orange", "label": "Naranja", "hex": "#E87A5D", "bleColorCode": 2 },
+        { "id": "purple", "label": "Morado", "hex": "#8B7BA8", "bleColorCode": 3 },
+        { "id": "blue", "label": "Azul", "hex": "#4B6E8C", "bleColorCode": 4 }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
+      "assets": {
+        "glb": "models/airpods-max-2.glb",
+        "caseClosed": "renders/airpods-max-2/case-closed.webp",
+        "caseOpen": "renders/airpods-max-2/case-open.webp",
+        "buds": "renders/airpods-max-2/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-pro-2",
+      "displayName": "Pro 2",
+      "kind": "earbuds",
+      "year": 2023,
+      "bleModelIds": [8212, 8228],
+      "colors": [
+        { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "bleColorCode": 0 }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
+      "assets": {
+        "glb": "models/airpods-pro-2.glb",
+        "caseClosed": "renders/airpods-pro-2/case-closed.webp",
+        "caseOpen": "renders/airpods-pro-2/case-open.webp",
+        "buds": "renders/airpods-pro-2/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-pro-1",
+      "displayName": "Pro 1",
+      "kind": "earbuds",
+      "year": 2019,
+      "bleModelIds": [8206],
+      "colors": [
+        { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "bleColorCode": 0 }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"],
+      "assets": {
+        "glb": "models/airpods-pro-1.glb",
+        "caseClosed": "renders/airpods-pro-1/case-closed.webp",
+        "caseOpen": "renders/airpods-pro-1/case-open.webp",
+        "buds": "renders/airpods-pro-1/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-3",
+      "displayName": "Series 3",
+      "kind": "earbuds",
+      "year": 2021,
+      "bleModelIds": [8211],
+      "colors": [
+        { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "bleColorCode": 0 }
+      ],
+      "listeningModes": [],
+      "assets": {
+        "glb": "models/airpods-3.glb",
+        "caseClosed": "renders/airpods-3/case-closed.webp",
+        "caseOpen": "renders/airpods-3/case-open.webp",
+        "buds": "renders/airpods-3/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-2",
+      "displayName": "Series 2",
+      "kind": "earbuds",
+      "year": 2019,
+      "bleModelIds": [8207],
+      "colors": [
+        { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "bleColorCode": 0 }
+      ],
+      "listeningModes": [],
+      "assets": {
+        "glb": "models/airpods-2.glb",
+        "caseClosed": "renders/airpods-2/case-closed.webp",
+        "caseOpen": "renders/airpods-2/case-open.webp",
+        "buds": "renders/airpods-2/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-1",
+      "displayName": "Series 1",
+      "kind": "earbuds",
+      "year": 2016,
+      "bleModelIds": [8194],
+      "colors": [
+        { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "bleColorCode": 0 }
+      ],
+      "listeningModes": [],
+      "assets": {
+        "glb": "models/airpods-1.glb",
+        "caseClosed": "renders/airpods-1/case-closed.webp",
+        "caseOpen": "renders/airpods-1/case-open.webp",
+        "buds": "renders/airpods-1/buds.webp"
+      }
+    },
+    {
+      "id": "airpods-max",
+      "displayName": "Max",
+      "kind": "over-ear",
+      "year": 2020,
+      "bleModelIds": [8202],
+      "colors": [
+        { "id": "midnight", "label": "Gris espacial", "hex": "#2A2B2E", "bleColorCode": 0 },
+        { "id": "starlight", "label": "Plata", "hex": "#E3E4E5", "bleColorCode": 1 },
+        { "id": "blue", "label": "Azul cielo", "hex": "#68829E", "bleColorCode": 2 }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"],
+      "assets": {
+        "glb": "models/airpods-max.glb",
+        "caseClosed": "renders/airpods-max/case-closed.webp",
+        "caseOpen": "renders/airpods-max/case-open.webp",
+        "buds": "renders/airpods-max/buds.webp"
+      }
+    }
+  ]
+}
