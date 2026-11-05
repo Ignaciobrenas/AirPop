@@ -1,0 +1,13 @@
+{
+  "modelId": 8231,
+  "modelHex": "0x2027",
+  "color": 0,
+  "batteryLeft": 80,
+  "batteryRight": 80,
+  "batteryCase": 60,
+  "chargingLeft": false,
+  "chargingRight": false,
+  "chargingCase": false,
+  "lidOpen": true,
+  "flipped": false
+}

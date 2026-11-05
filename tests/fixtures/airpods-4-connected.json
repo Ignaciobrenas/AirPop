@@ -1,0 +1,13 @@
+{
+  "modelId": 8217,
+  "modelHex": "0x2019",
+  "color": 0,
+  "batteryLeft": 90,
+  "batteryRight": 100,
+  "batteryCase": 70,
+  "chargingLeft": false,
+  "chargingRight": false,
+  "chargingCase": false,
+  "lidOpen": false,
+  "flipped": false
+}
