@@ -4,13 +4,13 @@
 
 # AirPop
 
-**Popup 3D de proximidad Bluetooth, icono de bandeja dinámico y flyout de batería en Rust + Tauri 2 + React Three Fiber**
+**3D Bluetooth Proximity Popup, Dynamic System Tray Battery Ring, and Listening-Mode Flyout built with Rust, Tauri 2, and React Three Fiber**
 
 [![Release](https://img.shields.io/github/v/release/Ignaciobrenas/AirPop?style=flat-square&color=0a84ff)](https://github.com/Ignaciobrenas/AirPop/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/Ignaciobrenas/AirPop/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Ignaciobrenas/AirPop/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-30d158.svg?style=flat-square)](LICENSE)
-[![Stack](https://img.shields.io/badge/Stack-Rust%20%7C%20Tauri%202%20%7C%20R3F-38bdf8?style=flat-square)](#arquitectura)
-[![Telemetry](https://img.shields.io/badge/Telemetr%C3%ADa-0%25%20Offline-10b981?style=flat-square)](#privacidad-y-aviso-legal)
+[![Stack](https://img.shields.io/badge/Stack-Rust%20%7C%20Tauri%202%20%7C%20R3F-38bdf8?style=flat-square)](#architecture)
+[![Telemetry](https://img.shields.io/badge/Telemetry-0%25%20Offline-10b981?style=flat-square)](#security--privacy)
 
 <br />
 
@@ -20,131 +20,134 @@
 
 ---
 
-## ✨ Características Principales
+## <img src="docs/assets/icons/sparkles.svg" width="22" height="22" align="absmiddle" alt="" /> Key Features
 
-- **Detección de Proximidad BLE (`0x004C` / `0x07`)**: Escaneo en tiempo real con filtro de intensidad de señal (`RSSI > -60 dBm`), correlación por firma de payload resistente a rotación de direcciones MAC (RPA) y antirrebote inteligente de 12 segundos.
-- **Escena 3D Interactiva en 60 FPS**: Renderizado con **React Three Fiber (Three.js)**, iluminación de estudio de 3 puntos, apertura de tapa sobre bisagra animada (`case_lid`), salida escalonada de auriculares (`bud_left`, `bud_right`), LED emisivo y parallax suave con el ratón.
-- **Dos Estados de Popup con Física de Resortes**:
-  - **Estado A — Proximidad (Caja abierta)**: Tarjeta translúcida (`28 px` de radio) con modelo 3D, anillos de batería individuales (`L`, `R`, `Caja`) y acción rápida de conexión.
-  - **Estado B — Conectado (Compacto)**: Pastilla flotante con estado de conexión, modo de escucha activo y porcentajes en números tabulares (`tabular-nums`).
-- **Barra de Tareas de Windows 10/11**:
-  - **Icono de bandeja dinámico**: Dibujado en memoria con `tiny-skia` mostrando el anillo del nivel mínimo entre `L`, `R` y `Caja`.
-  - **Flyout con Acrylic / Mica nativo**: Anclado al icono del sistema con selector segmentado de modo de escucha (*Cancelación*, *Transparencia*, *Adaptativo*, *Desactivado*) y ajustes rápidos.
-  - **Toasts nativos con Anti-Spam**: Alertas al 20 % y 10 % de batería y estuche cargado al 100 %, limitadas a máximo 1 notificación cada 30 minutos por evento y dispositivo.
-- **Modo `--simulate` sin Hardware**: Prueba cualquier modelo, color y escenario (`case-open`, `connected`, `low-battery`, `charging`) desde la línea de comandos.
+- **Real-Time BLE Proximity Detection (`0x004C` / `0x07`)**: Scans Bluetooth Low Energy advertisements, filters by signal strength (`RSSI > -60 dBm`), correlates devices via payload signature to handle rotating random MAC addresses (RPA), and enforces a 12-second per-device debounce.
+- **60 FPS Interactive 3D Scene**: Powered by **React Three Fiber (Three.js)** with studio 3-point lighting, animated hinge lid (`case_lid`), staggered floating earbuds (`bud_left`, `bud_right`), emissive status LED, and subtle mouse parallax.
+- **Two Spring-Driven Popup States**:
+  - **State A — Proximity (Case Open)**: Translucent glass card (`28px` border radius) displaying the 3D charging case, individual battery rings (`L`, `R`, `Case`), and quick connect action.
+  - **State B — Connected (Compact Pill)**: Compact floating pill displaying connection status, active listening mode badge, and tabular battery percentages (`tabular-nums`).
+- **Native Windows 10/11 Taskbar Integration**:
+  - **Dynamic System Tray Icon**: Rendered in-memory via `tiny-skia` showing a color-coded battery ring for the lowest level among `L`, `R`, and `Case`.
+  - **Acrylic / Mica Flyout**: Anchored to the tray icon with a segmented listening-mode selector (*Noise Cancellation*, *Transparency*, *Adaptive*, *Off*) using custom `1.75px` stroke SVG icons and quick settings toggles.
+  - **Anti-Spam Native Toasts**: Low-battery alerts (20% and 10%) and case fully charged notifications rate-limited to at most 1 toast per event and device every 30 minutes.
+- **Zero Idle CPU & GPU Footprint**: Code-split frontend bundles, automatic `frameloop="never"` suspension when hidden, explicit Three.js geometry/material disposal on unmount, and optional low-power WebView destruction mode.
+- **Hardware-Free `--simulate` CLI Mode**: Preview any model, color variant, and scenario (`case-open`, `connected`, `low-battery`, `charging`) directly from the command line.
 
 ---
 
-## 🏗️ Arquitectura
+## <img src="docs/assets/icons/layers.svg" width="22" height="22" align="absmiddle" alt="" /> Architecture
 
 ```text
 ┌──────────────────────────────────────────────────────────┐
-│ Núcleo Rust (Tauri 2)                                     │
+│ Rust Core (Tauri 2)                                      │
 │                                                           │
 │  ble::scanner ──► ble::apple_proximity (parser)           │
 │        │                     │                            │
-│  bt::watcher (conexión)      ▼                            │
-│        │              device::registry (catálogo)         │
+│  bt::watcher (connection)    ▼                            │
+│        │              device::registry (LRU/TTL catalog) │
 │        ▼                     │                            │
 │  state::machine ◄────────────┘                            │
 │        │                                                  │
-│        ├─► ipc (eventos JSON) ──► ventana popup           │
-│        ├─► tray (icono dinámico) ──► ventana flyout       │
-│        ├─► toast (notificaciones nativas)                 │
+│        ├─► ipc (validated JSON) ──► popup window          │
+│        ├─► tray (tiny-skia icon) ──► flyout window        │
+│        ├─► toast (rate-limited notifications)             │
 │        └─► settings (store) / autostart / single-instance │
 │                                                           │
-│  aap: protocolo L2CAP (con degradación automática en Win) │
+│  aap: L2CAP protocol (with automatic degradation on Win)  │
 └──────────────────────────────────────────────────────────┘
-                         │ eventos / comandos IPC
+                         │ IPC events & commands
                          ▼
 ┌──────────────────────────────────────────────────────────┐
 │ UI (WebView2)                                             │
-│  popup:  React + R3F + Framer Motion                      │
-│  flyout: React + SVG propios + controles segmentados      │
-│  stores (zustand), tokens.css, spring.ts, assets .glb     │
+│  popup:  React + R3F + Framer Motion (lazy chunk)         │
+│  flyout: React + Custom SVG Icon Library (lightweight)    │
+│  stores (zustand), tokens.css, spring.ts, .glb assets     │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🎧 Catálogo de Modelos (`catalog/models.json`)
+## <img src="docs/assets/icons/headphones.svg" width="22" height="22" align="absmiddle" alt="" /> Model Catalog (`catalog/models.json`)
 
-El catálogo está desacoplado en [`catalog/models.json`](catalog/models.json) para añadir nuevos modelos o variantes de color sin recompilar la lógica de interfaz:
+All supported models and colorways are defined declaratively in [`catalog/models.json`](catalog/models.json):
 
-| ID de Catálogo | Nombre en UI | Tipo | Año | Modos de Escucha | Colores |
+| Catalog ID | Display Name | Form Factor | Year | Listening Modes | Colorways |
 |---|---|---|---|---|---|
-| `airpods-pro-3` | **Pro 3** | In-ear | 2025 | Cancelación, Transparencia, Adaptativo, Off | Blanco |
-| `airpods-4` | **Series 4** | In-ear | 2024 | — | Blanco |
-| `airpods-4-anc` | **Series 4 ANC** | In-ear | 2024 | Cancelación, Transparencia, Adaptativo, Off | Blanco |
-| `airpods-max-2` | **Max 2** | Over-ear | 2026 | Cancelación, Transparencia, Adaptativo, Off | Medianoche, Blanco estelar, Naranja, Morado, Azul |
-| `airpods-pro-2` | **Pro 2** | In-ear | 2023 | Cancelación, Transparencia, Adaptativo, Off | Blanco |
-| `airpods-pro-1` | **Pro 1** | In-ear | 2019 | Cancelación, Transparencia, Off | Blanco |
-| `airpods-3` | **Series 3** | In-ear | 2021 | — | Blanco |
-| `airpods-2` | **Series 2** | In-ear | 2019 | — | Blanco |
-| `airpods-1` | **Series 1** | In-ear | 2016 | — | Blanco |
-| `airpods-max` | **Max** | Over-ear | 2020 | Cancelación, Transparencia, Off | Gris espacial, Plata, Azul cielo |
+| `airpods-pro-3` | **Pro 3** | In-ear | 2025 | Noise Cancellation, Transparency, Adaptive, Off | White |
+| `airpods-4` | **Series 4** | In-ear | 2024 | — | White |
+| `airpods-4-anc` | **Series 4 ANC** | In-ear | 2024 | Noise Cancellation, Transparency, Adaptive, Off | White |
+| `airpods-max-2` | **Max 2** | Over-ear | 2026 | Noise Cancellation, Transparency, Adaptive, Off | Midnight, Starlight, Orange, Purple, Blue |
+| `airpods-pro-2` | **Pro 2** | In-ear | 2023 | Noise Cancellation, Transparency, Adaptive, Off | White |
+| `airpods-pro-1` | **Pro 1** | In-ear | 2019 | Noise Cancellation, Transparency, Off | White |
+| `airpods-3` | **Series 3** | In-ear | 2021 | — | White |
+| `airpods-2` | **Series 2** | In-ear | 2019 | — | White |
+| `airpods-1` | **Series 1** | In-ear | 2016 | — | White |
+| `airpods-max` | **Max** | Over-ear | 2020 | Noise Cancellation, Transparency, Off | Space Gray, Silver, Sky Blue |
 
 ---
 
-## 🚀 Inicio Rápido y Uso
+## <img src="docs/assets/icons/terminal.svg" width="22" height="22" align="absmiddle" alt="" /> Quick Start & CLI Usage
 
-### Requisitos
-- **Sistema Operativo**: Windows 10 (1903+) o Windows 11 (con soporte experimental para Linux vía BlueZ y macOS vía IOBluetooth).
-- **Bluetooth**: Adaptador compatible con Bluetooth 4.0+ (BLE).
-- **Entorno de desarrollo**: Node.js 22+, Rust Stable y dependencias de Tauri 2.
+### Prerequisites
+- **Operating System**: Windows 10 (1903+) or Windows 11 (with cross-platform backend abstractions for Linux via BlueZ and macOS via IOBluetooth).
+- **Bluetooth**: Bluetooth 4.0+ (BLE) adapter.
+- **Toolchain**: Node.js 22+, Rust Stable, and Tauri 2 build prerequisites.
 
-### Desarrollo y Tests de UI
+### Frontend Development & Testing
 ```bash
 cd ui
 npm install
 npm run lint
 npm test
-npm run dev
+npm run build
 ```
 
-### Modo Simulación (`--simulate`)
-Itera sobre el diseño o prueba cualquier escenario sin necesidad de auriculares físicos:
+### Simulation Mode (`--simulate`)
+Iterate on UI choreography or test any model and scenario without physical hardware:
 ```bash
-# Sintaxis: airpop --simulate <modelo> <color> <escenario>
+# Syntax: airpop --simulate <model> <color> <scenario>
 cargo run -p airpop -- --simulate airpods-pro-3 white case-open
 cargo run -p airpop -- --simulate airpods-max-2 orange connected
 cargo run -p airpop -- --simulate airpods-4-anc white charging
 cargo run -p airpop -- --simulate airpods-pro-3 white low-battery
 ```
 
-### Captura de Payloads BLE Propios (`tools/capture`)
+### Capturing Live BLE Payloads (`tools/capture`)
 ```bash
 cargo run -p airpop-capture -- --duration-secs 30
 ```
 
-### Regenerar Modelos `.glb` y Renders `.webp`
+### Regenerating `.glb` Models & `.webp` Renders
 ```bash
 node tools/blender/generate_assets.mjs
-# O con Blender instalado en PATH:
+# Or using Blender in headless mode:
 blender --background --python tools/blender/render_all.py
 ```
 
 ---
 
-## ⚡ Presupuesto de Calidad y Rendimiento
+## <img src="docs/assets/icons/gauge.svg" width="22" height="22" align="absmiddle" alt="" /> Performance & Resource Budget
 
-| Métrica | Objetivo | Implementación |
+| Metric | Target Budget | Implementation Strategy |
 |---|---|---|
-| **CPU en reposo** | `~0 %` | El `<Canvas>` 3D solo se monta mientras el popup es visible |
-| **Primer frame** | `< 150 ms` | Ventanas pre-inicializadas ocultas al arranque |
-| **Framerate** | `60 fps` | Resortes en `spring.ts` y `dpr={[1, 1.5]}` |
-| **Accesibilidad** | `WCAG AA` | `aria-live="polite"`, cierre con `Esc` y soporte `prefers-reduced-motion` |
-| **Tamaño por modelo** | `< 2 MB` | Geometría `.glb` optimizada y renders `.webp` |
+| **Idle CPU Usage** | `~0%` | 3D `<Canvas>` unmounts when hidden and sets `frameloop="never"` on background visibility |
+| **Popup First Frame** | `< 150 ms` | Pre-initialized hidden overlay windows + vendor code-splitting |
+| **Animation Frame Rate** | `60 fps` | Physics springs (`spring.ts`), `dpr={[1, 1.5]}`, and `powerPreference: "low-power"` |
+| **Memory Overhead** | `< 100 MB` | Explicit GPU geometry/material disposal + bounded LRU/TTL device registry |
+| **Accessibility** | `WCAG 2.1 AA` | `aria-live="polite"`, `Escape` key dismissal, and `prefers-reduced-motion` support |
 
 ---
 
-## 🔒 Privacidad y Aviso Legal
+## <img src="docs/assets/icons/shield.svg" width="22" height="22" align="absmiddle" alt="" /> Security & Privacy
 
-- **Cero Telemetría**: AirPop funciona 100 % en local. No realiza conexiones de red ni recopila métricas.
-- **Activos Originales**: Todos los modelos 3D, renders, iconos SVG (trazo de `1.75 px`) y elementos de marca son creación propia bajo licencia MIT. No se utilizan modelos, renders, iconos (SF Symbols), sonidos ni logotipos propietarios de Apple Inc.
+- **Zero Telemetry & Offline-Only**: AirPop makes zero external network requests and collects no analytics or telemetry.
+- **Strict Content Security Policy (CSP) & Tauri Capabilities**: Enforces a locked-down CSP (`default-src 'self'; connect-src ipc: http://ipc.localhost`) and least-privilege Tauri v2 capabilities (`src-tauri/capabilities/default.json`).
+- **Allowlist IPC Validation**: Every IPC command validates `modelId`, `color`, and settings fields against the catalog allowlist and strict length bounds. See [`SECURITY.md`](SECURITY.md) for the full threat model.
+- **100% Original Assets**: All 3D `.glb` meshes, `.webp` renders, custom `1.75px` stroke SVG icons (`ui/src/shared/icons.tsx`), and synthesized Web Audio chimes are original creations. No Apple Inc. models, renders, SF Symbols, audio files, or trademarks are used.
 
 ---
 
-## 📄 Licencia
+## <img src="docs/assets/icons/scale.svg" width="22" height="22" align="absmiddle" alt="" /> License
 
-Distribuido bajo la licencia [MIT](LICENSE).
+Distributed under the [MIT License](LICENSE).

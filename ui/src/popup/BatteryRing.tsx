@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { ChargingBoltIcon } from "../shared/icons";
 import { resolveTransition } from "../shared/spring";
 
 export interface BatteryRingProps {
@@ -96,24 +97,7 @@ export const BatteryRing: React.FC<BatteryRingProps> = ({
           >
             {percentage === null ? "—" : `${clamped}`}
           </span>
-          {charging && (
-            <svg
-              width="11"
-              height="13"
-              viewBox="0 0 12 14"
-              fill="none"
-              aria-label="Cargando"
-            >
-              <path
-                d="M7 1L2 8H6L5 13L10 6H6L7 1Z"
-                stroke="var(--ok)"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="var(--ok)"
-              />
-            </svg>
-          )}
+          {charging && <ChargingBoltIcon size={11} ariaLabel="Cargando" />}
         </div>
       </div>
 

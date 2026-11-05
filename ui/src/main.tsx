@@ -1,7 +1,4 @@
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom/client";
-import { Flyout } from "./flyout/Flyout";
-import { Popup } from "./popup/Popup";
+import React, { Suspense, useEffect, useState } from "react";
 import {
   AppSettings,
   BatteryEventPayload,
@@ -11,12 +8,21 @@ import {
   listenEvent,
   ListeningModeEventPayload,
 } from "./shared/ipc";
+import { playConnectionChime } from "./shared/sound";
 import { useAirPopStore } from "./shared/store";
 import "./shared/tokens.css";
+
+const LazyPopup = React.lazy(() =>
+  import("./popup/Popup").then((m) => ({ default: m.Popup }))
+);
+const LazyFlyout = React.lazy(() =>
+  import("./flyout/Flyout").then((m) => ({ default: m.Flyout }))
+);
 
 export const AppRoot: React.FC = () => {
   const [hash, setHash] = useState<string>(() => window.location.hash || "#popup");
   const {
+    settings,
     applyCaseOpen,
     applyConnected,
     applyBattery,
@@ -33,8 +39,14 @@ export const AppRoot: React.FC = () => {
 
   useEffect(() => {
     const cleanups: Array<Promise<() => void>> = [
-      listenEvent<CaseOpenEventPayload>(IPC_EVENTS.CASE_OPEN, applyCaseOpen),
-      listenEvent<ConnectedEventPayload>(IPC_EVENTS.CONNECTED, applyConnected),
+      listenEvent<CaseOpenEventPayload>(IPC_EVENTS.CASE_OPEN, (payload) => {
+        applyCaseOpen(payload);
+        playConnectionChime(settings.soundEnabled);
+      }),
+      listenEvent<ConnectedEventPayload>(IPC_EVENTS.CONNECTED, (payload) => {
+        applyConnected(payload);
+        playConnectionChime(settings.soundEnabled);
+      }),
       listenEvent<BatteryEventPayload>(IPC_EVENTS.BATTERY, (p) =>
         applyBattery(
           { left: p.left, right: p.right, case: p.case },
@@ -57,6 +69,7 @@ export const AppRoot: React.FC = () => {
       });
     };
   }, [
+    settings.soundEnabled,
     applyCaseOpen,
     applyConnected,
     applyBattery,
@@ -65,18 +78,20 @@ export const AppRoot: React.FC = () => {
     updateSettings,
   ]);
 
-  if (hash === "#flyout") {
-    return <Flyout />;
-  }
-
-  return <Popup />;
+  return (
+    <Suspense fallback={null}>
+      {hash === "#flyout" ? <LazyFlyout /> : <LazyPopup />}
+    </Suspense>
+  );
 };
 
 const rootEl = document.getElementById("root");
 if (rootEl) {
-  ReactDOM.createRoot(rootEl).render(
-    <React.StrictMode>
-      <AppRoot />
-    </React.StrictMode>
-  );
+  import("react-dom/client").then(({ createRoot }) => {
+    createRoot(rootEl).render(
+      <React.StrictMode>
+        <AppRoot />
+      </React.StrictMode>
+    );
+  });
 }

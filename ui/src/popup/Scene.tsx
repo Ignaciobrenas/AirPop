@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import React, { useEffect, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 export interface SceneProps {
@@ -12,6 +12,40 @@ export interface SceneProps {
   pointerY: number;
   reducedMotion: boolean;
 }
+
+export function disposeObject3D(root: THREE.Object3D): number {
+  let disposedCount = 0;
+  root.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (mesh.geometry) {
+      mesh.geometry.dispose();
+      disposedCount += 1;
+    }
+    if (mesh.material) {
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach((m) => m.dispose());
+        disposedCount += mesh.material.length;
+      } else {
+        mesh.material.dispose();
+        disposedCount += 1;
+      }
+    }
+  });
+  return disposedCount;
+}
+
+const GpuResourceLifecycle: React.FC = () => {
+  const { gl, scene } = useThree();
+
+  useEffect(() => {
+    return () => {
+      disposeObject3D(scene);
+      gl.renderLists.dispose();
+    };
+  }, [gl, scene]);
+
+  return null;
+};
 
 interface EarbudsRigProps {
   kind: "earbuds" | "over-ear";
@@ -38,8 +72,18 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
   const rightBudRef = useRef<THREE.Group>(null);
   const elapsedRef = useRef(0);
 
+  useEffect(() => {
+    const group = rootRef.current;
+    return () => {
+      if (group) {
+        disposeObject3D(group);
+      }
+    };
+  }, []);
+
   useFrame((_, delta) => {
-    elapsedRef.current += delta;
+    const safeDelta = Math.min(delta, 0.1);
+    elapsedRef.current += safeDelta;
     const t = elapsedRef.current;
 
     if (rootRef.current) {
@@ -88,8 +132,8 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
       );
 
       if (!reducedMotion && leftReady) {
-        leftBudRef.current.rotation.y += delta * 0.45;
-        rightBudRef.current.rotation.y -= delta * 0.45;
+        leftBudRef.current.rotation.y += safeDelta * 0.45;
+        rightBudRef.current.rotation.y -= safeDelta * 0.45;
       }
     }
   });
@@ -107,11 +151,7 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
         />
       </mesh>
 
-      <group
-        ref={lidRef}
-        name="case_lid"
-        position={[0, 0.32, -0.38]}
-      >
+      <group ref={lidRef} name="case_lid" position={[0, 0.32, -0.38]}>
         <mesh position={[0, 0.22, 0.38]} castShadow>
           <boxGeometry args={[1.65, 0.46, 0.76]} />
           <meshStandardMaterial
@@ -124,7 +164,7 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
 
       <group ref={leftBudRef} name="bud_left" position={[-0.44, 0.12, 0]}>
         <mesh castShadow>
-          <sphereGeometry args={[0.26, 24, 24]} />
+          <sphereGeometry args={[0.26, 20, 20]} />
           <meshStandardMaterial
             color={colorHex}
             roughness={0.18}
@@ -132,7 +172,7 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
           />
         </mesh>
         <mesh position={[0, -0.28, 0]}>
-          <cylinderGeometry args={[0.075, 0.065, 0.44, 16]} />
+          <cylinderGeometry args={[0.075, 0.065, 0.44, 14]} />
           <meshStandardMaterial
             color={colorHex}
             roughness={0.2}
@@ -143,7 +183,7 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
 
       <group ref={rightBudRef} name="bud_right" position={[0.44, 0.12, 0]}>
         <mesh castShadow>
-          <sphereGeometry args={[0.26, 24, 24]} />
+          <sphereGeometry args={[0.26, 20, 20]} />
           <meshStandardMaterial
             color={colorHex}
             roughness={0.18}
@@ -151,7 +191,7 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
           />
         </mesh>
         <mesh position={[0, -0.28, 0]}>
-          <cylinderGeometry args={[0.075, 0.065, 0.44, 16]} />
+          <cylinderGeometry args={[0.075, 0.065, 0.44, 14]} />
           <meshStandardMaterial
             color={colorHex}
             roughness={0.2}
@@ -162,7 +202,7 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
 
       {kind === "over-ear" && (
         <mesh name="ear_cushions" position={[0, 0.55, 0]}>
-          <torusGeometry args={[0.72, 0.12, 16, 40]} />
+          <torusGeometry args={[0.72, 0.12, 14, 32]} />
           <meshStandardMaterial
             color={colorHex}
             roughness={0.32}
@@ -172,7 +212,7 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
       )}
 
       <mesh name="led" position={[0, -0.14, 0.39]}>
-        <sphereGeometry args={[0.045, 16, 16]} />
+        <sphereGeometry args={[0.045, 12, 12]} />
         <meshStandardMaterial
           color={ledColor}
           emissive={ledColor}
@@ -185,6 +225,19 @@ const EarbudsRig: React.FC<EarbudsRigProps> = ({
 };
 
 export const Scene: React.FC<SceneProps> = (props) => {
+  const [pageVisible, setPageVisible] = useState<boolean>(() =>
+    typeof document !== "undefined" ? !document.hidden : true
+  );
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      setPageVisible(!document.hidden);
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, []);
+
   if (typeof window !== "undefined" && !("WebGLRenderingContext" in window)) {
     return (
       <div
@@ -200,20 +253,43 @@ export const Scene: React.FC<SceneProps> = (props) => {
     );
   }
 
+  const activeFrameloop = !pageVisible
+    ? "never"
+    : props.reducedMotion
+    ? "demand"
+    : "always";
+
   return (
     <div
       data-testid="popup-3d-scene"
       style={{ width: "100%", height: "190px", position: "relative" }}
     >
       <Canvas
+        frameloop={activeFrameloop}
         dpr={[1, 1.5]}
         camera={{ position: [0, 0.65, 3.3], fov: 38 }}
-        gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+        gl={{
+          alpha: true,
+          antialias: true,
+          powerPreference: "low-power",
+          stencil: false,
+          depth: true,
+        }}
       >
+        <GpuResourceLifecycle />
         <ambientLight intensity={0.65} />
         <directionalLight position={[2.6, 3.8, 3.2]} intensity={1.35} />
-        <directionalLight position={[-2.4, 1.5, -2.0]} intensity={0.55} color="#38bdf8" />
-        <pointLight position={[0, -0.14, 0.6]} intensity={0.6} distance={2.5} color="#30d158" />
+        <directionalLight
+          position={[-2.4, 1.5, -2.0]}
+          intensity={0.55}
+          color="#38bdf8"
+        />
+        <pointLight
+          position={[0, -0.14, 0.6]}
+          intensity={0.6}
+          distance={2.5}
+          color="#30d158"
+        />
         <EarbudsRig {...props} />
       </Canvas>
     </div>
