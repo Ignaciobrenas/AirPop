@@ -10,7 +10,7 @@ export interface IconProps {
 export const ChargingBoltIcon: React.FC<IconProps> = ({
   size = 12,
   color = "var(--ok)",
-  ariaLabel = "Charging",
+  ariaLabel = "Cargando",
 }) => (
   <svg
     width={size}
@@ -135,7 +135,7 @@ export const OffModeIcon: React.FC<IconProps> = ({ size = 18 }) => (
 );
 
 export const EarbudsGlyphIcon: React.FC<IconProps> = ({
-  size = 20,
+  size = 16,
   color = "currentColor",
 }) => (
   <svg
@@ -146,18 +146,57 @@ export const EarbudsGlyphIcon: React.FC<IconProps> = ({
     aria-hidden="true"
   >
     <path
-      d="M8 9.5C8 7.567 9.567 6 11.5 6H12.5C14.433 6 16 7.567 16 9.5V15.5C16 17.433 14.433 19 12.5 19H11.5C9.567 19 8 17.433 8 15.5V9.5Z"
+      d="M7.5 8.5C7.5 6.843 8.843 5.5 10.5 5.5C12.157 5.5 13.5 6.843 13.5 8.5C13.5 10.157 12.157 11.5 10.5 11.5H9.5V17.5C9.5 18.328 8.828 19 8 19C7.172 19 6.5 18.328 6.5 17.5V9.5"
       stroke={color}
       strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
     <path
-      d="M8 11H16"
+      d="M16.5 8.5C16.5 6.843 15.157 5.5 13.5 5.5M16.5 8.5V17.5C16.5 18.328 15.828 19 15 19C14.172 19 13.5 18.328 13.5 17.5V13"
       stroke={color}
       strokeWidth="1.75"
       strokeLinecap="round"
+      strokeLinejoin="round"
     />
-    <circle cx="12" cy="15" r="1" fill={color} />
+  </svg>
+);
+
+export const HeadbandGlyphIcon: React.FC<IconProps> = ({
+  size = 16,
+  color = "currentColor",
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path
+      d="M4 14V12C4 7.582 7.582 4 12 4C16.418 4 20 7.582 20 12V14"
+      stroke={color}
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <rect
+      x="3"
+      y="13"
+      width="4"
+      height="7"
+      rx="2"
+      stroke={color}
+      strokeWidth="1.75"
+    />
+    <rect
+      x="17"
+      y="13"
+      width="4"
+      height="7"
+      rx="2"
+      stroke={color}
+      strokeWidth="1.75"
+    />
   </svg>
 );

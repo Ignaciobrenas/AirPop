@@ -76,7 +76,9 @@ impl ToastLimiter {
         }
 
         if let Some(case_level) = battery.case {
-            let prev = self.previous_case_battery.insert(device_id.to_string(), case_level);
+            let prev = self
+                .previous_case_battery
+                .insert(device_id.to_string(), case_level);
             if case_level == 100
                 && prev.map(|p| p < 100).unwrap_or(false)
                 && self.can_send(device_id, ToastKind::CaseCharged, now_ms)
@@ -118,8 +120,13 @@ mod tests {
         let duplicate = limiter.evaluate_battery("dev-1", "Pro 3", &bat_20, &charging, 60_000);
         assert!(duplicate.is_empty());
 
-        let after_30m =
-            limiter.evaluate_battery("dev-1", "Pro 3", &bat_20, &charging, 1_000 + TOAST_COOLDOWN_MS + 1);
+        let after_30m = limiter.evaluate_battery(
+            "dev-1",
+            "Pro 3",
+            &bat_20,
+            &charging,
+            1_000 + TOAST_COOLDOWN_MS + 1,
+        );
         assert_eq!(after_30m.len(), 1);
     }
 }

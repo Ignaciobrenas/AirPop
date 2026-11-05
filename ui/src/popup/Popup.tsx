@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { EarbudsGlyphIcon, HeadbandGlyphIcon } from "../shared/icons";
 import { resolveTransition } from "../shared/spring";
 import {
   findCatalogModel,
+  resolveAccentHex,
   resolveColorHex,
   useAirPopStore,
 } from "../shared/store";
@@ -30,6 +32,8 @@ export const Popup: React.FC = () => {
 
   const model = findCatalogModel(models, modelId);
   const colorHex = resolveColorHex(model, colorId);
+  const accentHex = resolveAccentHex(model, colorId);
+  const isOverEar = model.kind === "over-ear";
   const minLevel = [battery.left, battery.right, battery.case]
     .filter((v): v is number => v !== null)
     .reduce((acc, v) => Math.min(acc, v), 100);
@@ -113,17 +117,41 @@ export const Popup: React.FC = () => {
             }
             transition={resolveTransition("enter", prefersReducedMotion)}
             style={{
-              width: "356px",
+              width: "364px",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "var(--space-4)",
+              gap: "var(--space-3)",
             }}
           >
+            <div
+              className="airpop-control"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "var(--space-2)",
+                padding: "var(--space-1) var(--space-3)",
+                fontSize: "11px",
+                fontWeight: 500,
+                color: "var(--text-secondary)",
+              }}
+            >
+              {isOverEar ? (
+                <HeadbandGlyphIcon size={14} />
+              ) : (
+                <EarbudsGlyphIcon size={14} />
+              )}
+              <span>
+                {isOverEar ? "Diadema · Over-Ear" : "In-Ear · True Wireless"}
+              </span>
+            </div>
+
             <Scene
               modelId={model.id}
               kind={model.kind}
+              silhouette={model.silhouette}
               colorHex={colorHex}
+              accentHex={accentHex}
               lidOpen={true}
               lowBattery={minLevel < 20}
               pointerX={pointer.x}
@@ -136,7 +164,7 @@ export const Popup: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{
                 ...resolveTransition("soft", prefersReducedMotion),
-                delay: prefersReducedMotion ? 0 : 0.8,
+                delay: prefersReducedMotion ? 0 : 0.35,
               }}
               style={{
                 display: "flex",
@@ -165,21 +193,31 @@ export const Popup: React.FC = () => {
                   width: "100%",
                 }}
               >
-                <BatteryRing
-                  label="L"
-                  percentage={battery.left}
-                  charging={charging.left}
-                />
-                <BatteryRing
-                  label="R"
-                  percentage={battery.right}
-                  charging={charging.right}
-                />
-                <BatteryRing
-                  label="Caja"
-                  percentage={battery.case}
-                  charging={charging.case}
-                />
+                {isOverEar ? (
+                  <BatteryRing
+                    label="Diadema"
+                    percentage={battery.left ?? battery.right}
+                    charging={charging.left || charging.right}
+                  />
+                ) : (
+                  <>
+                    <BatteryRing
+                      label="L"
+                      percentage={battery.left}
+                      charging={charging.left}
+                    />
+                    <BatteryRing
+                      label="R"
+                      percentage={battery.right}
+                      charging={charging.right}
+                    />
+                    <BatteryRing
+                      label="Caja"
+                      percentage={battery.case}
+                      charging={charging.case}
+                    />
+                  </>
+                )}
               </div>
 
               <button
@@ -227,7 +265,7 @@ export const Popup: React.FC = () => {
             }
             transition={resolveTransition("enter", prefersReducedMotion)}
             style={{
-              width: "340px",
+              width: "348px",
               display: "flex",
               flexDirection: "column",
               gap: "var(--space-2)",
@@ -257,6 +295,11 @@ export const Popup: React.FC = () => {
                     display: "inline-block",
                   }}
                 />
+                {isOverEar ? (
+                  <HeadbandGlyphIcon size={16} />
+                ) : (
+                  <EarbudsGlyphIcon size={16} />
+                )}
                 <span
                   style={{
                     fontSize: "17px",
@@ -290,9 +333,15 @@ export const Popup: React.FC = () => {
                 color: "var(--text-secondary)",
               }}
             >
-              <span>L {battery.left ?? "—"}%</span>
-              <span>R {battery.right ?? "—"}%</span>
-              <span>Caja {battery.case ?? "—"}%</span>
+              {isOverEar ? (
+                <span>Batería Diadema {battery.left ?? battery.right ?? "—"}%</span>
+              ) : (
+                <>
+                  <span>L {battery.left ?? "—"}%</span>
+                  <span>R {battery.right ?? "—"}%</span>
+                  <span>Caja {battery.case ?? "—"}%</span>
+                </>
+              )}
             </div>
           </motion.div>
         )}

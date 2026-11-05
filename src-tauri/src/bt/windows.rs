@@ -40,51 +40,53 @@ impl BtBackend for WindowsBtBackend {
                             if let Ok(bt_device) = async_op.get() {
                                 let tx = sender.clone();
                                 let debouncer_inner = debouncer.clone();
-                                let status_handler =
-                                    TypedEventHandler::<BluetoothDevice, windows::core::IInspectable>::new(
-                                        move |dev_opt, _| {
-                                            if let Some(dev) = dev_opt {
-                                                let dev_id = dev
-                                                    .DeviceId()
-                                                    .map(|s| s.to_string())
-                                                    .unwrap_or_default();
-                                                let name = dev
-                                                    .Name()
-                                                    .map(|s| s.to_string())
-                                                    .unwrap_or_else(|_| "Auriculares".to_string());
-                                                let status = dev
-                                                    .ConnectionStatus()
-                                                    .unwrap_or(BluetoothConnectionStatus::Disconnected);
-                                                let connected =
-                                                    status == BluetoothConnectionStatus::Connected;
-                                                let now_ms = std::time::SystemTime::now()
-                                                    .duration_since(std::time::UNIX_EPOCH)
-                                                    .map(|d| d.as_millis() as u64)
-                                                    .unwrap_or(0);
+                                let status_handler = TypedEventHandler::<
+                                    BluetoothDevice,
+                                    windows::core::IInspectable,
+                                >::new(
+                                    move |dev_opt, _| {
+                                        if let Some(dev) = dev_opt {
+                                            let dev_id = dev
+                                                .DeviceId()
+                                                .map(|s| s.to_string())
+                                                .unwrap_or_default();
+                                            let name = dev
+                                                .Name()
+                                                .map(|s| s.to_string())
+                                                .unwrap_or_else(|_| "Auriculares".to_string());
+                                            let status = dev
+                                                .ConnectionStatus()
+                                                .unwrap_or(BluetoothConnectionStatus::Disconnected);
+                                            let connected =
+                                                status == BluetoothConnectionStatus::Connected;
+                                            let now_ms = std::time::SystemTime::now()
+                                                .duration_since(std::time::UNIX_EPOCH)
+                                                .map(|d| d.as_millis() as u64)
+                                                .unwrap_or(0);
 
-                                                if debouncer_inner
-                                                    .should_emit(&dev_id, connected, now_ms)
-                                                {
-                                                    let evt = if connected {
-                                                        BtEvent::Connected {
-                                                            device_id: dev_id,
-                                                            name,
-                                                            timestamp_ms: now_ms,
-                                                        }
-                                                    } else {
-                                                        BtEvent::Disconnected {
-                                                            device_id: dev_id,
-                                                            name,
-                                                            timestamp_ms: now_ms,
-                                                        }
-                                                    };
-                                                    info!("bluetooth connection event: {:?}", evt);
-                                                    let _ = tx.try_send(evt);
-                                                }
+                                            if debouncer_inner
+                                                .should_emit(&dev_id, connected, now_ms)
+                                            {
+                                                let evt = if connected {
+                                                    BtEvent::Connected {
+                                                        device_id: dev_id,
+                                                        name,
+                                                        timestamp_ms: now_ms,
+                                                    }
+                                                } else {
+                                                    BtEvent::Disconnected {
+                                                        device_id: dev_id,
+                                                        name,
+                                                        timestamp_ms: now_ms,
+                                                    }
+                                                };
+                                                info!("bluetooth connection event: {:?}", evt);
+                                                let _ = tx.try_send(evt);
                                             }
-                                            Ok(())
-                                        },
-                                    );
+                                        }
+                                        Ok(())
+                                    },
+                                );
                                 let _ = bt_device.ConnectionStatusChanged(&status_handler);
                             }
                         }

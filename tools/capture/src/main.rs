@@ -22,14 +22,22 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let manager = Manager::new().await.context("failed to initialize BLE manager")?;
-    let adapters = manager.adapters().await.context("failed to list BLE adapters")?;
+    let manager = Manager::new()
+        .await
+        .context("failed to initialize BLE manager")?;
+    let adapters = manager
+        .adapters()
+        .await
+        .context("failed to list BLE adapters")?;
     let central = adapters
         .into_iter()
         .next()
         .context("no Bluetooth LE adapter found")?;
 
-    println!("Scanning Apple BLE advertisements (0x004C) for {}s...", args.duration_secs);
+    println!(
+        "Scanning Apple BLE advertisements (0x004C) for {}s...",
+        args.duration_secs
+    );
     central.start_scan(ScanFilter::default()).await?;
 
     let mut events = central.events().await?;

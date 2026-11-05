@@ -54,23 +54,65 @@ impl AppRuntimeState {
     }
 }
 
+pub fn is_windows_fullscreen_busy() -> bool {
+    #[cfg(windows)]
+    {
+        use windows::Win32::UI::Shell::{
+            SHQueryUserNotificationState, QUNS_BUSY, QUNS_PRESENTATION_MODE,
+            QUNS_RUNNING_D3D_FULL_SCREEN,
+        };
+        if let Ok(state) = unsafe { SHQueryUserNotificationState() } {
+            return state == QUNS_RUNNING_D3D_FULL_SCREEN
+                || state == QUNS_PRESENTATION_MODE
+                || state == QUNS_BUSY;
+        }
+        false
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
+pub fn sanitize_settings(mut settings: AppSettings) -> AppSettings {
+    if let Some(ref monitor) = settings.preferred_monitor {
+        let valid = monitor.len() <= 64
+            && monitor
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ');
+        if !valid {
+            settings.preferred_monitor = None;
+        }
+    }
+    settings
+}
+
 pub fn position_popup_bottom_center(window: &WebviewWindow) {
-    if let Ok(Some(monitor)) = window.current_monitor().or_else(|_| window.primary_monitor()) {
+    if let Ok(Some(monitor)) = window
+        .current_monitor()
+        .or_else(|_| window.primary_monitor())
+    {
         let screen_size = monitor.size();
         let screen_pos = monitor.position();
         let scale = monitor.scale_factor();
-        let win_size = window
-            .outer_size()
-            .unwrap_or(tauri::PhysicalSize::new((420.0 * scale) as u32, (480.0 * scale) as u32));
+        let win_size = window.outer_size().unwrap_or(tauri::PhysicalSize::new(
+            (420.0 * scale) as u32,
+            (480.0 * scale) as u32,
+        ));
         let taskbar_margin_px = (68.0 * scale) as i32;
 
         let x = screen_pos.x + ((screen_size.width as i32 - win_size.width as i32) / 2);
-        let y = screen_pos.y + (screen_size.height as i32) - (win_size.height as i32) - taskbar_margin_px;
+        let y = screen_pos.y + (screen_size.height as i32)
+            - (win_size.height as i32)
+            - taskbar_margin_px;
         let _ = window.set_position(PhysicalPosition::new(x, y));
     }
 }
 
 pub fn show_popup_overlay(app: &AppHandle) {
+    if is_windows_fullscreen_busy() {
+        return;
+    }
     if let Some(window) = app.get_webview_window("popup") {
         position_popup_bottom_center(&window);
         let _ = window.set_ignore_cursor_events(false);
@@ -85,29 +127,39 @@ pub fn trigger_simulation(
     color: &str,
     scenario: SimulationScenario,
 ) {
-    let display_name = if let Ok(guard) = state.lock() {
-        guard
-            .registry
-            .catalog()
-            .find_by_id(model_id)
-            .map(|m| m.display_name.clone())
-            .unwrap_or_else(|| "Pro 3".to_string())
+    let (display_name, is_over_ear, resolved_color) = if let Ok(guard) = state.lock() {
+        let catalog = guard.registry.catalog();
+        if let Some(m) = catalog.find_by_id(model_id) {
+            let valid_color = if m.colors.iter().any(|c| c.id == color) {
+                color.to_string()
+            } else {
+                m.colors
+                    .first()
+                    .map(|c| c.id.clone())
+                    .unwrap_or_else(|| "white".to_string())
+            };
+            (m.display_name.clone(), m.is_over_ear(), valid_color)
+        } else {
+            ("Pro 3".to_string(), false, "white".to_string())
+        }
     } else {
-        "Pro 3".to_string()
+        ("Pro 3".to_string(), false, "white".to_string())
     };
 
     show_popup_overlay(app);
+
+    let default_case = if is_over_ear { None } else { Some(64) };
 
     match scenario {
         SimulationScenario::CaseOpen => {
             let payload = CaseOpenEventPayload {
                 model_id: model_id.to_string(),
                 display_name,
-                color: color.to_string(),
+                color: resolved_color,
                 battery: BatteryState {
                     left: Some(82),
                     right: Some(80),
-                    case: Some(64),
+                    case: default_case,
                 },
                 charging: ChargingState {
                     left: false,
@@ -123,11 +175,11 @@ pub fn trigger_simulation(
             let payload = ConnectedEventPayload {
                 name: display_name,
                 model_id: model_id.to_string(),
-                color: color.to_string(),
+                color: resolved_color,
                 battery: BatteryState {
                     left: Some(82),
                     right: Some(80),
-                    case: Some(64),
+                    case: default_case,
                 },
                 listening_mode: Some(ListeningMode::NoiseCancellation),
                 aap_supported: true,
@@ -138,11 +190,11 @@ pub fn trigger_simulation(
             let payload = CaseOpenEventPayload {
                 model_id: model_id.to_string(),
                 display_name,
-                color: color.to_string(),
+                color: resolved_color,
                 battery: BatteryState {
                     left: Some(14),
-                    right: Some(22),
-                    case: Some(10),
+                    right: Some(14),
+                    case: if is_over_ear { None } else { Some(10) },
                 },
                 charging: ChargingState {
                     left: false,
@@ -158,16 +210,16 @@ pub fn trigger_simulation(
             let payload = CaseOpenEventPayload {
                 model_id: model_id.to_string(),
                 display_name,
-                color: color.to_string(),
+                color: resolved_color,
                 battery: BatteryState {
                     left: Some(54),
                     right: Some(58),
-                    case: Some(76),
+                    case: if is_over_ear { None } else { Some(76) },
                 },
                 charging: ChargingState {
                     left: true,
                     right: true,
-                    case: true,
+                    case: !is_over_ear,
                 },
                 rssi: -44,
                 aap_supported: true,
@@ -178,11 +230,11 @@ pub fn trigger_simulation(
                 BatteryEventPayload {
                     left: Some(54),
                     right: Some(58),
-                    case: Some(76),
+                    case: if is_over_ear { None } else { Some(76) },
                     charging: ChargingState {
                         left: true,
                         right: true,
-                        case: true,
+                        case: !is_over_ear,
                     },
                 },
             );
@@ -197,7 +249,10 @@ pub fn set_listening_mode(
     mode: ListeningMode,
 ) -> Result<(), String> {
     if let Ok(mut guard) = state.lock() {
-        guard.aap.set_listening_mode(mode).map_err(|e| e.to_string())?;
+        guard
+            .aap
+            .set_listening_mode(mode)
+            .map_err(|e| e.to_string())?;
         let _ = app.emit(EVENT_LISTENING_MODE, ListeningModeEventPayload { mode });
     }
     Ok(())
@@ -205,10 +260,7 @@ pub fn set_listening_mode(
 
 #[tauri::command]
 pub fn get_settings(state: tauri::State<'_, Mutex<AppRuntimeState>>) -> AppSettings {
-    state
-        .lock()
-        .map(|g| g.settings.clone())
-        .unwrap_or_default()
+    state.lock().map(|g| g.settings.clone()).unwrap_or_default()
 }
 
 #[tauri::command]
@@ -217,12 +269,13 @@ pub fn set_settings(
     state: tauri::State<'_, Mutex<AppRuntimeState>>,
     settings: AppSettings,
 ) -> AppSettings {
+    let clean = sanitize_settings(settings);
     if let Ok(mut guard) = state.lock() {
-        guard.state_machine.set_do_not_disturb(settings.do_not_disturb);
-        guard.settings = settings.clone();
+        guard.state_machine.set_do_not_disturb(clean.do_not_disturb);
+        guard.settings = clean.clone();
     }
-    let _ = app.emit(EVENT_SETTINGS, settings.clone());
-    settings
+    let _ = app.emit(EVENT_SETTINGS, clean.clone());
+    clean
 }
 
 #[tauri::command]
@@ -231,6 +284,7 @@ pub fn dismiss_popup(app: AppHandle, state: tauri::State<'_, Mutex<AppRuntimeSta
         guard.state_machine.dismiss();
     }
     if let Some(window) = app.get_webview_window("popup") {
+        let _ = window.set_ignore_cursor_events(true);
         let _ = window.hide();
     }
 }
@@ -249,6 +303,40 @@ pub fn simulate(
     model_id: String,
     color: String,
     scenario: SimulationScenario,
-) {
+) -> Result<(), String> {
+    if model_id.len() > 64 || color.len() > 32 {
+        return Err("invalid model or color identifier length".to_string());
+    }
+    if let Ok(guard) = state.lock() {
+        if guard.registry.catalog().find_by_id(&model_id).is_none() {
+            return Err("unknown catalog model_id".to_string());
+        }
+    }
     trigger_simulation(&app, &state, &model_id, &color, scenario);
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sanitize_settings_rejects_invalid_monitor_names() {
+        let bad = AppSettings {
+            preferred_monitor: Some("../../malicious/path".to_string()),
+            ..AppSettings::default()
+        };
+        let sanitized = sanitize_settings(bad);
+        assert_eq!(sanitized.preferred_monitor, None);
+
+        let good = AppSettings {
+            preferred_monitor: Some("DISPLAY-1".to_string()),
+            ..AppSettings::default()
+        };
+        let sanitized_good = sanitize_settings(good);
+        assert_eq!(
+            sanitized_good.preferred_monitor,
+            Some("DISPLAY-1".to_string())
+        );
+    }
 }

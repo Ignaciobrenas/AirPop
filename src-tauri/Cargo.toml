@@ -1,6 +1,6 @@
 [package]
 name = "airpop"
-version = "1.0.0"
+version = "1.1.0"
 description = "3D proximity popup, dynamic battery tray icon, and listening-mode flyout for wireless earbuds"
 authors = ["Ignacio Breñas"]
 license = "MIT"

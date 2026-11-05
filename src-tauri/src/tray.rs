@@ -20,9 +20,8 @@ pub fn color_for_battery(level: Option<u8>) -> Color {
 }
 
 pub fn render_tray_icon_rgba(battery: &BatteryState, connected: bool) -> Vec<u8> {
-    let mut pixmap = Pixmap::new(TRAY_ICON_SIZE, TRAY_ICON_SIZE).unwrap_or_else(|| {
-        Pixmap::new(16, 16).expect("valid fallback pixmap")
-    });
+    let mut pixmap = Pixmap::new(TRAY_ICON_SIZE, TRAY_ICON_SIZE)
+        .unwrap_or_else(|| Pixmap::new(16, 16).expect("valid fallback pixmap"));
 
     let center = (TRAY_ICON_SIZE as f32) * 0.5;
     let radius = 24.0_f32;
@@ -49,7 +48,10 @@ pub fn render_tray_icon_rgba(battery: &BatteryState, connected: bool) -> Vec<u8>
     }
 
     let min_level = minimum_battery_level(battery);
-    let pct = min_level.unwrap_or(if connected { 100 } else { 0 }).clamp(0, 100) as f32 / 100.0;
+    let pct = min_level
+        .unwrap_or(if connected { 100 } else { 0 })
+        .clamp(0, 100) as f32
+        / 100.0;
 
     if pct > 0.01 {
         let mut ring_paint = Paint::default();
@@ -74,13 +76,7 @@ pub fn render_tray_icon_rgba(battery: &BatteryState, connected: bool) -> Vec<u8>
         }
 
         if let Some(arc_path) = pb.finish() {
-            pixmap.stroke_path(
-                &arc_path,
-                &ring_paint,
-                &stroke,
-                Transform::identity(),
-                None,
-            );
+            pixmap.stroke_path(&arc_path, &ring_paint, &stroke, Transform::identity(), None);
         }
     }
 
@@ -121,7 +117,10 @@ pub fn format_tray_tooltip(
         .unwrap_or_else(|| "—".to_string());
 
     match listening_mode {
-        Some(mode) => format!("{} • L {} | R {} | Caja {} • {}", device_name, l, r, c, mode),
+        Some(mode) => format!(
+            "{} • L {} | R {} | Caja {} • {}",
+            device_name, l, r, c, mode
+        ),
         None => format!("{} • L {} | R {} | Caja {}", device_name, l, r, c),
     }
 }

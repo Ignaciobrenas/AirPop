@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -134,6 +135,104 @@ function createMinimalGlb(modelDef) {
   return Buffer.concat([header, jsonChunkHeader, paddedJson, binChunkHeader, paddedBin]);
 }
 
+function crc32(buf) {
+  let c = 0xffffffff;
+  for (let i = 0; i < buf.length; i++) {
+    c ^= buf[i];
+    for (let k = 0; k < 8; k++) {
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    }
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function makePngChunk(typeStr, dataBuf) {
+  const lenBuf = Buffer.alloc(4);
+  lenBuf.writeUInt32BE(dataBuf.length, 0);
+  const typeBuf = Buffer.from(typeStr, "ascii");
+  const crcVal = crc32(Buffer.concat([typeBuf, dataBuf]));
+  const crcBuf = Buffer.alloc(4);
+  crcBuf.writeUInt32BE(crcVal, 0);
+  return Buffer.concat([lenBuf, typeBuf, dataBuf, crcBuf]);
+}
+
+function createRgbaPngBuffer(width, height) {
+  const rawScanlines = Buffer.alloc(height * (1 + width * 4), 0);
+  const cx = width / 2;
+  const cy = height / 2;
+
+  for (let y = 0; y < height; y++) {
+    const rowStart = y * (1 + width * 4);
+    rawScanlines[rowStart] = 0;
+    for (let x = 0; x < width; x++) {
+      const px = rowStart + 1 + x * 4;
+      const dx = x - cx;
+      const dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist <= width * 0.46) {
+        let r = 14;
+        let g = 16;
+        let b = 24;
+        const a = 255;
+
+        if (Math.abs(dist - width * 0.34) < 2.8) {
+          r = 48;
+          g = 209;
+          b = 88;
+        } else if (Math.abs(dx) < width * 0.18 && Math.abs(dy - 2) < height * 0.15) {
+          r = 240;
+          g = 242;
+          b = 247;
+        }
+
+        rawScanlines[px] = r;
+        rawScanlines[px + 1] = g;
+        rawScanlines[px + 2] = b;
+        rawScanlines[px + 3] = a;
+      }
+    }
+  }
+
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6;
+  ihdr[10] = 0;
+  ihdr[11] = 0;
+  ihdr[12] = 0;
+
+  const idatData = zlib.deflateSync(rawScanlines);
+  const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+  return Buffer.concat([
+    signature,
+    makePngChunk("IHDR", ihdr),
+    makePngChunk("IDAT", idatData),
+    makePngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+function createIcoFromPng(pngBuffer, width, height) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(1, 4);
+
+  const entry = Buffer.alloc(16);
+  entry[0] = width >= 256 ? 0 : width;
+  entry[1] = height >= 256 ? 0 : height;
+  entry[2] = 0;
+  entry[3] = 0;
+  entry.writeUInt16LE(1, 4);
+  entry.writeUInt16LE(32, 6);
+  entry.writeUInt32LE(pngBuffer.length, 8);
+  entry.writeUInt32LE(22, 12);
+
+  return Buffer.concat([header, entry, pngBuffer]);
+}
+
 const minimalWebpBase64 =
   "UklGRkAAAABXRUJQVlA4WAoAAAAQAAAADwAADwAAQUxQSBIAAAABBxAR/Q8ABFD+/39A8f//f0A=";
 const minimalWebpBuffer = Buffer.from(minimalWebpBase64, "base64");
@@ -161,8 +260,7 @@ for (const baseDir of dirsToPopulate) {
 
 const iconsDir = path.join(rootDir, "src-tauri/icons");
 fs.mkdirSync(iconsDir, { recursive: true });
-const logoSrc = path.join(rootDir, "docs/assets/logo.png");
-if (fs.existsSync(logoSrc)) {
-  fs.copyFileSync(logoSrc, path.join(iconsDir, "icon.png"));
-  fs.copyFileSync(logoSrc, path.join(iconsDir, "icon.ico"));
-}
+const png64 = createRgbaPngBuffer(64, 64);
+const ico64 = createIcoFromPng(png64, 64, 64);
+fs.writeFileSync(path.join(iconsDir, "icon.png"), png64);
+fs.writeFileSync(path.join(iconsDir, "icon.ico"), ico64);

@@ -38,8 +38,9 @@ fn main() {
             if let Some(flyout_win) = app.get_webview_window("flyout") {
                 #[cfg(target_os = "windows")]
                 {
-                    let _ = window_vibrancy::apply_mica(&flyout_win, Some(true))
-                        .or_else(|_| window_vibrancy::apply_acrylic(&flyout_win, Some((18, 18, 22, 180))));
+                    let _ = window_vibrancy::apply_mica(&flyout_win, Some(true)).or_else(|_| {
+                        window_vibrancy::apply_acrylic(&flyout_win, Some((18, 18, 22, 180)))
+                    });
                 }
             }
 
@@ -113,8 +114,7 @@ fn main() {
                                 if let tauri::Position::Physical(pos) = rect.position {
                                     let x = (pos.x - 160).max(16);
                                     let y = (pos.y - 436).max(16);
-                                    let _ = flyout
-                                        .set_position(tauri::PhysicalPosition::new(x, y));
+                                    let _ = flyout.set_position(tauri::PhysicalPosition::new(x, y));
                                 }
                                 let _ = flyout.show();
                                 let _ = flyout.set_focus();

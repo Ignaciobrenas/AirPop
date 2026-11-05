@@ -4,9 +4,16 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to upload .exe binaries to"
+        required: true
+        default: "v1.1.0"
 
 jobs:
   release-windows:
+    name: Build Windows .exe & Upload to Release
     permissions:
       contents: write
     runs-on: windows-latest
@@ -15,20 +22,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
+          cache-dependency-path: ui/package-lock.json
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Install UI dependencies & build
+      - name: Build UI Production Bundle
         working-directory: ui
         run: |
-          npm install
+          npm ci
           npm run build
-      - name: Build Tauri Bundle
-        uses: tauri-apps/tauri-action@v0
+      - name: Build Release Executables (.exe)
+        run: |
+          cargo build --release --workspace
+      - name: Upload .exe Assets to GitHub Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "AirPop ${{ github.ref_name }}"
-          releaseBody: "Instaladores oficiales MSI / NSIS para Windows 10 y Windows 11."
-          releaseDraft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $TAG = if ("${{ github.event.inputs.tag }}" -ne "") { "${{ github.event.inputs.tag }}" } else { "${{ github.ref_name }}" }
+          Copy-Item target\release\airpop.exe airpop-windows-x64.exe
+          Copy-Item target\release\airpop-capture.exe airpop-capture-windows-x64.exe
+          gh release upload $TAG target\release\airpop.exe airpop-windows-x64.exe airpop-capture-windows-x64.exe --clobber

@@ -12,19 +12,30 @@ import {
   SimulationScenario,
 } from "./ipc";
 
+export type ModelSilhouette =
+  | "stem-earbuds"
+  | "bud-in-ear"
+  | "over-ear-oval"
+  | "over-ear-sculpted";
+
 export interface CatalogColor {
   id: string;
   label: string;
   hex: string;
+  accentHex?: string;
   bleColorCode?: number;
 }
 
 export interface CatalogModel {
   id: string;
   displayName: string;
+  vendor?: string;
   kind: "earbuds" | "over-ear";
+  silhouette?: ModelSilhouette;
   year: number;
+  bleCompanyIds?: number[];
   bleModelIds: number[];
+  btNamePatterns?: string[];
   colors: CatalogColor[];
   listeningModes: ListeningMode[];
   assets: {
@@ -72,10 +83,7 @@ export function findCatalogModel(
   models: CatalogModel[],
   modelId: string
 ): CatalogModel {
-  return (
-    models.find((m) => m.id === modelId) ??
-    models[0]
-  );
+  return models.find((m) => m.id === modelId) ?? models[0];
 }
 
 export function resolveColorHex(model: CatalogModel, colorId: string): string {
@@ -83,6 +91,14 @@ export function resolveColorHex(model: CatalogModel, colorId: string): string {
     model.colors.find((c) => c.id === colorId)?.hex ??
     model.colors[0]?.hex ??
     "#F5F5F7"
+  );
+}
+
+export function resolveAccentHex(model: CatalogModel, colorId: string): string {
+  return (
+    model.colors.find((c) => c.id === colorId)?.accentHex ??
+    model.colors[0]?.accentHex ??
+    "#8E95A5"
   );
 }
 
@@ -169,12 +185,17 @@ export const useAirPopStore = create<AirPopState>((set, get) => ({
 
   triggerSimulation: (modelId, color, scenario) => {
     const model = findCatalogModel(get().models, modelId);
+    const isOverEar = model.kind === "over-ear";
     if (scenario === "connected") {
       get().applyConnected({
         name: model.displayName,
         modelId: model.id,
         color,
-        battery: { left: 82, right: 80, case: 64 },
+        battery: {
+          left: 82,
+          right: 80,
+          case: isOverEar ? null : 64,
+        },
         listeningMode: "noise-cancellation",
         aapSupported: true,
       });
@@ -183,7 +204,11 @@ export const useAirPopStore = create<AirPopState>((set, get) => ({
         modelId: model.id,
         displayName: model.displayName,
         color,
-        battery: { left: 12, right: 24, case: 10 },
+        battery: {
+          left: 12,
+          right: 14,
+          case: isOverEar ? null : 10,
+        },
         charging: { left: false, right: false, case: false },
         rssi: -48,
         aapSupported: true,
@@ -193,8 +218,12 @@ export const useAirPopStore = create<AirPopState>((set, get) => ({
         modelId: model.id,
         displayName: model.displayName,
         color,
-        battery: { left: 55, right: 60, case: 80 },
-        charging: { left: true, right: true, case: true },
+        battery: {
+          left: 55,
+          right: 60,
+          case: isOverEar ? null : 80,
+        },
+        charging: { left: true, right: true, case: !isOverEar },
         rssi: -44,
         aapSupported: true,
       });
@@ -203,7 +232,11 @@ export const useAirPopStore = create<AirPopState>((set, get) => ({
         modelId: model.id,
         displayName: model.displayName,
         color,
-        battery: { left: 82, right: 80, case: 64 },
+        battery: {
+          left: 82,
+          right: 80,
+          case: isOverEar ? null : 64,
+        },
         charging: { left: false, right: false, case: false },
         rssi: -46,
         aapSupported: true,

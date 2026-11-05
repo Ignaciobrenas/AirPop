@@ -1,6 +1,6 @@
 [package]
 name = "airpop-capture"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 description = "CLI utility to capture and inspect Apple BLE proximity advertisements (0x004C)"
 

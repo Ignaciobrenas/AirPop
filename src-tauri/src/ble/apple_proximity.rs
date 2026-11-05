@@ -71,11 +71,7 @@ impl ProximityPayload {
         let l = self.battery_left.unwrap_or(0xFF) as u64;
         let r = self.battery_right.unwrap_or(0xFF) as u64;
         let c = self.battery_case.unwrap_or(0xFF) as u64;
-        ((self.model_id as u64) << 32)
-            | ((self.color as u64) << 24)
-            | (l << 16)
-            | (r << 8)
-            | c
+        ((self.model_id as u64) << 32) | ((self.color as u64) << 24) | (l << 16) | (r << 8) | c
     }
 }
 
@@ -188,8 +184,13 @@ mod tests {
                 actual: 3
             })
         );
-        let invalid_type = [0x09, 0x19, 0x01, 0x20, 0x24, 0x00, 0x88, 0x06, 0x01, 0x00, 0x00];
-        assert_eq!(parse(&invalid_type), Err(ParseError::InvalidMessageType(0x09)));
+        let invalid_type = [
+            0x09, 0x19, 0x01, 0x20, 0x24, 0x00, 0x88, 0x06, 0x01, 0x00, 0x00,
+        ];
+        assert_eq!(
+            parse(&invalid_type),
+            Err(ParseError::InvalidMessageType(0x09))
+        );
     }
 
     #[test]

@@ -199,6 +199,9 @@ mod tests {
             logical_id: "airpods-pro-3-00".to_string(),
             catalog_model_id: "airpods-pro-3".to_string(),
             display_name: "Pro 3".to_string(),
+            vendor: "GenericPro".to_string(),
+            kind: "earbuds".to_string(),
+            silhouette: "stem-earbuds".to_string(),
             color_id: "white".to_string(),
             battery: BatteryState {
                 left: Some(80),
