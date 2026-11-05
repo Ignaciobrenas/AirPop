@@ -83,7 +83,7 @@ export const Popup: React.FC = () => {
         paddingBottom: "var(--space-5)",
       }}
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {popupMode === "proximity" && (
           <motion.div
             key="popup-proximity"
