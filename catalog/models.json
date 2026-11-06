@@ -7,6 +7,7 @@
       "kind": "earbuds",
       "silhouette": "stem-earbuds",
       "year": 2025,
+      "listeningControl": "aap",
       "bleCompanyIds": [76],
       "bleModelIds": [8231],
       "btNamePatterns": ["Pro 3"],
@@ -14,12 +15,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "accentHex": "#D2D4DC", "bleColorCode": 0 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/airpods-pro-3.glb",
-        "caseClosed": "renders/airpods-pro-3/case-closed.webp",
-        "caseOpen": "renders/airpods-pro-3/case-open.webp",
-        "buds": "renders/airpods-pro-3/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-pro-3.glb", "caseClosed": "renders/airpods-pro-3/case-closed.webp", "caseOpen": "renders/airpods-pro-3/case-open.webp", "buds": "renders/airpods-pro-3/buds.webp" }
     },
     {
       "id": "airpods-4",
@@ -35,12 +31,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "accentHex": "#D2D4DC", "bleColorCode": 0 }
       ],
       "listeningModes": [],
-      "assets": {
-        "glb": "models/airpods-4.glb",
-        "caseClosed": "renders/airpods-4/case-closed.webp",
-        "caseOpen": "renders/airpods-4/case-open.webp",
-        "buds": "renders/airpods-4/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-4.glb", "caseClosed": "renders/airpods-4/case-closed.webp", "caseOpen": "renders/airpods-4/case-open.webp", "buds": "renders/airpods-4/buds.webp" }
     },
     {
       "id": "airpods-4-anc",
@@ -49,6 +40,7 @@
       "kind": "earbuds",
       "silhouette": "stem-earbuds",
       "year": 2024,
+      "listeningControl": "aap",
       "bleCompanyIds": [76],
       "bleModelIds": [8219],
       "btNamePatterns": ["Series 4 ANC"],
@@ -56,12 +48,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "accentHex": "#D2D4DC", "bleColorCode": 0 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/airpods-4-anc.glb",
-        "caseClosed": "renders/airpods-4-anc/case-closed.webp",
-        "caseOpen": "renders/airpods-4-anc/case-open.webp",
-        "buds": "renders/airpods-4-anc/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-4-anc.glb", "caseClosed": "renders/airpods-4-anc/case-closed.webp", "caseOpen": "renders/airpods-4-anc/case-open.webp", "buds": "renders/airpods-4-anc/buds.webp" }
     },
     {
       "id": "airpods-max-2",
@@ -70,6 +57,7 @@
       "kind": "over-ear",
       "silhouette": "over-ear-oval",
       "year": 2026,
+      "listeningControl": "aap",
       "bleCompanyIds": [76],
       "bleModelIds": [8239],
       "btNamePatterns": ["Max 2"],
@@ -81,12 +69,7 @@
         { "id": "blue", "label": "Azul", "hex": "#4B6E8C", "accentHex": "#34526C", "bleColorCode": 4 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/airpods-max-2.glb",
-        "caseClosed": "renders/airpods-max-2/case-closed.webp",
-        "caseOpen": "renders/airpods-max-2/case-open.webp",
-        "buds": "renders/airpods-max-2/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-max-2.glb", "caseClosed": "renders/airpods-max-2/case-closed.webp", "caseOpen": "renders/airpods-max-2/case-open.webp", "buds": "renders/airpods-max-2/buds.webp" }
     },
     {
       "id": "sony-wh-1000xm5",
@@ -105,12 +88,7 @@
         { "id": "smoky-pink", "label": "Rosa ahumado", "hex": "#C8AEB0", "accentHex": "#9E7E80", "bleColorCode": 3 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/sony-wh-1000xm5.glb",
-        "caseClosed": "renders/sony-wh-1000xm5/case-closed.webp",
-        "caseOpen": "renders/sony-wh-1000xm5/case-open.webp",
-        "buds": "renders/sony-wh-1000xm5/buds.webp"
-      }
+      "assets": { "glb": "models/sony-wh-1000xm5.glb", "caseClosed": "renders/sony-wh-1000xm5/case-closed.webp", "caseOpen": "renders/sony-wh-1000xm5/case-open.webp", "buds": "renders/sony-wh-1000xm5/buds.webp" }
     },
     {
       "id": "sony-wh-1000xm4",
@@ -127,12 +105,7 @@
         { "id": "silver", "label": "Plata", "hex": "#D5D2CA", "accentHex": "#B8925A", "bleColorCode": 1 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/sony-wh-1000xm4.glb",
-        "caseClosed": "renders/sony-wh-1000xm4/case-closed.webp",
-        "caseOpen": "renders/sony-wh-1000xm4/case-open.webp",
-        "buds": "renders/sony-wh-1000xm4/buds.webp"
-      }
+      "assets": { "glb": "models/sony-wh-1000xm4.glb", "caseClosed": "renders/sony-wh-1000xm4/case-closed.webp", "caseOpen": "renders/sony-wh-1000xm4/case-open.webp", "buds": "renders/sony-wh-1000xm4/buds.webp" }
     },
     {
       "id": "sony-wf-1000xm5",
@@ -148,13 +121,8 @@
         { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#C59B6D", "bleColorCode": 0 },
         { "id": "silver", "label": "Plata platino", "hex": "#D8D6CE", "accentHex": "#B89A74", "bleColorCode": 1 }
       ],
-      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/sony-wf-1000xm5.glb",
-        "caseClosed": "renders/sony-wf-1000xm5/case-closed.webp",
-        "caseOpen": "renders/sony-wf-1000xm5/case-open.webp",
-        "buds": "renders/sony-wf-1000xm5/buds.webp"
-      }
+      "listeningModes": ["noise-cancellation", "transparency", "off"],
+      "assets": { "glb": "models/sony-wf-1000xm5.glb", "caseClosed": "renders/sony-wf-1000xm5/case-closed.webp", "caseOpen": "renders/sony-wf-1000xm5/case-open.webp", "buds": "renders/sony-wf-1000xm5/buds.webp" }
     },
     {
       "id": "bose-qc-ultra-headphones",
@@ -165,7 +133,7 @@
       "year": 2024,
       "bleCompanyIds": [158],
       "bleModelIds": [9101],
-      "btNamePatterns": ["Bose QC Ultra Headphones", "QuietComfort Ultra", "Bose QC"],
+      "btNamePatterns": ["Bose QC Ultra Headphones", "QuietComfort Ultra Headphones", "QC Ultra Headphones"],
       "colors": [
         { "id": "black", "label": "Negro", "hex": "#18191C", "accentHex": "#3A3D45", "bleColorCode": 0 },
         { "id": "white-smoke", "label": "Humo blanco", "hex": "#EAE7E1", "accentHex": "#C8C3B8", "bleColorCode": 1 },
@@ -173,12 +141,7 @@
         { "id": "lunar-blue", "label": "Azul lunar", "hex": "#2F435A", "accentHex": "#526E8C", "bleColorCode": 3 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/bose-qc-ultra-headphones.glb",
-        "caseClosed": "renders/bose-qc-ultra-headphones/case-closed.webp",
-        "caseOpen": "renders/bose-qc-ultra-headphones/case-open.webp",
-        "buds": "renders/bose-qc-ultra-headphones/buds.webp"
-      }
+      "assets": { "glb": "models/bose-qc-ultra-headphones.glb", "caseClosed": "renders/bose-qc-ultra-headphones/case-closed.webp", "caseOpen": "renders/bose-qc-ultra-headphones/case-open.webp", "buds": "renders/bose-qc-ultra-headphones/buds.webp" }
     },
     {
       "id": "bose-qc-ultra-earbuds",
@@ -189,18 +152,13 @@
       "year": 2024,
       "bleCompanyIds": [158],
       "bleModelIds": [9102],
-      "btNamePatterns": ["Bose QC Ultra Earbuds", "QC Earbuds"],
+      "btNamePatterns": ["Bose QC Ultra Earbuds", "QuietComfort Ultra Earbuds", "QC Ultra Earbuds", "QC Earbuds"],
       "colors": [
         { "id": "black", "label": "Negro", "hex": "#18191C", "accentHex": "#3A3D45", "bleColorCode": 0 },
         { "id": "white-smoke", "label": "Humo blanco", "hex": "#EAE7E1", "accentHex": "#C8C3B8", "bleColorCode": 1 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/bose-qc-ultra-earbuds.glb",
-        "caseClosed": "renders/bose-qc-ultra-earbuds/case-closed.webp",
-        "caseOpen": "renders/bose-qc-ultra-earbuds/case-open.webp",
-        "buds": "renders/bose-qc-ultra-earbuds/buds.webp"
-      }
+      "assets": { "glb": "models/bose-qc-ultra-earbuds.glb", "caseClosed": "renders/bose-qc-ultra-earbuds/case-closed.webp", "caseOpen": "renders/bose-qc-ultra-earbuds/case-open.webp", "buds": "renders/bose-qc-ultra-earbuds/buds.webp" }
     },
     {
       "id": "sennheiser-momentum-4",
@@ -211,30 +169,25 @@
       "year": 2023,
       "bleCompanyIds": [130],
       "bleModelIds": [9201],
-      "btNamePatterns": ["MOMENTUM 4", "Sennheiser"],
+      "btNamePatterns": ["MOMENTUM 4"],
       "colors": [
         { "id": "graphite", "label": "Grafito", "hex": "#2E3036", "accentHex": "#525660", "bleColorCode": 0 },
         { "id": "white", "label": "Blanco", "hex": "#ECECEC", "accentHex": "#C8C4BC", "bleColorCode": 1 },
         { "id": "copper", "label": "Cobre", "hex": "#222327", "accentHex": "#B86B43", "bleColorCode": 2 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/sennheiser-momentum-4.glb",
-        "caseClosed": "renders/sennheiser-momentum-4/case-closed.webp",
-        "caseOpen": "renders/sennheiser-momentum-4/case-open.webp",
-        "buds": "renders/sennheiser-momentum-4/buds.webp"
-      }
+      "assets": { "glb": "models/sennheiser-momentum-4.glb", "caseClosed": "renders/sennheiser-momentum-4/case-closed.webp", "caseOpen": "renders/sennheiser-momentum-4/case-open.webp", "buds": "renders/sennheiser-momentum-4/buds.webp" }
     },
     {
       "id": "beats-studio-pro",
-      "displayName": "Studio Pro",
-      "vendor": "Studio",
+      "displayName": "Beats Studio Pro",
+      "vendor": "Beats",
       "kind": "over-ear",
       "silhouette": "over-ear-oval",
       "year": 2023,
       "bleCompanyIds": [76],
       "bleModelIds": [8215],
-      "btNamePatterns": ["Studio Pro", "Beats Studio"],
+      "btNamePatterns": ["Beats Studio Pro", "Studio Pro"],
       "colors": [
         { "id": "matte-black", "label": "Negro mate", "hex": "#1E1E22", "accentHex": "#8C8E96", "bleColorCode": 0 },
         { "id": "sandstone", "label": "Arenisca", "hex": "#C8BEB4", "accentHex": "#9A8E82", "bleColorCode": 1 },
@@ -242,12 +195,7 @@
         { "id": "deep-brown", "label": "Marrón oscuro", "hex": "#42312B", "accentHex": "#8C6F64", "bleColorCode": 3 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "off"],
-      "assets": {
-        "glb": "models/beats-studio-pro.glb",
-        "caseClosed": "renders/beats-studio-pro/case-closed.webp",
-        "caseOpen": "renders/beats-studio-pro/case-open.webp",
-        "buds": "renders/beats-studio-pro/buds.webp"
-      }
+      "assets": { "glb": "models/beats-studio-pro.glb", "caseClosed": "renders/beats-studio-pro/case-closed.webp", "caseOpen": "renders/beats-studio-pro/case-open.webp", "buds": "renders/beats-studio-pro/buds.webp" }
     },
     {
       "id": "galaxy-buds3-pro",
@@ -264,12 +212,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F4F5F7", "accentHex": "#D0D4DC", "bleColorCode": 1 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/galaxy-buds3-pro.glb",
-        "caseClosed": "renders/galaxy-buds3-pro/case-closed.webp",
-        "caseOpen": "renders/galaxy-buds3-pro/case-open.webp",
-        "buds": "renders/galaxy-buds3-pro/buds.webp"
-      }
+      "assets": { "glb": "models/galaxy-buds3-pro.glb", "caseClosed": "renders/galaxy-buds3-pro/case-closed.webp", "caseOpen": "renders/galaxy-buds3-pro/case-open.webp", "buds": "renders/galaxy-buds3-pro/buds.webp" }
     },
     {
       "id": "airpods-pro-2",
@@ -278,6 +221,7 @@
       "kind": "earbuds",
       "silhouette": "stem-earbuds",
       "year": 2023,
+      "listeningControl": "aap",
       "bleCompanyIds": [76],
       "bleModelIds": [8212, 8228],
       "btNamePatterns": ["Pro 2"],
@@ -285,12 +229,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "accentHex": "#D2D4DC", "bleColorCode": 0 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"],
-      "assets": {
-        "glb": "models/airpods-pro-2.glb",
-        "caseClosed": "renders/airpods-pro-2/case-closed.webp",
-        "caseOpen": "renders/airpods-pro-2/case-open.webp",
-        "buds": "renders/airpods-pro-2/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-pro-2.glb", "caseClosed": "renders/airpods-pro-2/case-closed.webp", "caseOpen": "renders/airpods-pro-2/case-open.webp", "buds": "renders/airpods-pro-2/buds.webp" }
     },
     {
       "id": "airpods-pro-1",
@@ -299,6 +238,7 @@
       "kind": "earbuds",
       "silhouette": "stem-earbuds",
       "year": 2019,
+      "listeningControl": "aap",
       "bleCompanyIds": [76],
       "bleModelIds": [8206],
       "btNamePatterns": ["Pro 1"],
@@ -306,12 +246,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "accentHex": "#D2D4DC", "bleColorCode": 0 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "off"],
-      "assets": {
-        "glb": "models/airpods-pro-1.glb",
-        "caseClosed": "renders/airpods-pro-1/case-closed.webp",
-        "caseOpen": "renders/airpods-pro-1/case-open.webp",
-        "buds": "renders/airpods-pro-1/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-pro-1.glb", "caseClosed": "renders/airpods-pro-1/case-closed.webp", "caseOpen": "renders/airpods-pro-1/case-open.webp", "buds": "renders/airpods-pro-1/buds.webp" }
     },
     {
       "id": "airpods-3",
@@ -327,12 +262,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "accentHex": "#D2D4DC", "bleColorCode": 0 }
       ],
       "listeningModes": [],
-      "assets": {
-        "glb": "models/airpods-3.glb",
-        "caseClosed": "renders/airpods-3/case-closed.webp",
-        "caseOpen": "renders/airpods-3/case-open.webp",
-        "buds": "renders/airpods-3/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-3.glb", "caseClosed": "renders/airpods-3/case-closed.webp", "caseOpen": "renders/airpods-3/case-open.webp", "buds": "renders/airpods-3/buds.webp" }
     },
     {
       "id": "airpods-2",
@@ -348,12 +278,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "accentHex": "#D2D4DC", "bleColorCode": 0 }
       ],
       "listeningModes": [],
-      "assets": {
-        "glb": "models/airpods-2.glb",
-        "caseClosed": "renders/airpods-2/case-closed.webp",
-        "caseOpen": "renders/airpods-2/case-open.webp",
-        "buds": "renders/airpods-2/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-2.glb", "caseClosed": "renders/airpods-2/case-closed.webp", "caseOpen": "renders/airpods-2/case-open.webp", "buds": "renders/airpods-2/buds.webp" }
     },
     {
       "id": "airpods-1",
@@ -369,12 +294,7 @@
         { "id": "white", "label": "Blanco", "hex": "#F5F5F7", "accentHex": "#D2D4DC", "bleColorCode": 0 }
       ],
       "listeningModes": [],
-      "assets": {
-        "glb": "models/airpods-1.glb",
-        "caseClosed": "renders/airpods-1/case-closed.webp",
-        "caseOpen": "renders/airpods-1/case-open.webp",
-        "buds": "renders/airpods-1/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-1.glb", "caseClosed": "renders/airpods-1/case-closed.webp", "caseOpen": "renders/airpods-1/case-open.webp", "buds": "renders/airpods-1/buds.webp" }
     },
     {
       "id": "airpods-max",
@@ -383,6 +303,7 @@
       "kind": "over-ear",
       "silhouette": "over-ear-oval",
       "year": 2020,
+      "listeningControl": "aap",
       "bleCompanyIds": [76],
       "bleModelIds": [8202],
       "btNamePatterns": ["Max"],
@@ -392,12 +313,519 @@
         { "id": "blue", "label": "Azul cielo", "hex": "#68829E", "accentHex": "#4E6884", "bleColorCode": 2 }
       ],
       "listeningModes": ["noise-cancellation", "transparency", "off"],
-      "assets": {
-        "glb": "models/airpods-max.glb",
-        "caseClosed": "renders/airpods-max/case-closed.webp",
-        "caseOpen": "renders/airpods-max/case-open.webp",
-        "buds": "renders/airpods-max/buds.webp"
-      }
+      "assets": { "glb": "models/airpods-max.glb", "caseClosed": "renders/airpods-max/case-closed.webp", "caseOpen": "renders/airpods-max/case-open.webp", "buds": "renders/airpods-max/buds.webp" }
+    },
+    {
+      "id": "sony-wh-1000xm6",
+      "displayName": "Sony WH-1000XM6",
+      "vendor": "Sony",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2025,
+      "btNamePatterns": ["WH-1000XM6", "XM6"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "platinum", "label": "Platino", "hex": "#D8D6CE", "accentHex": "#B89A74" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"]
+    },
+    {
+      "id": "sony-wh-1000xm3",
+      "displayName": "Sony WH-1000XM3",
+      "vendor": "Sony",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2018,
+      "btNamePatterns": ["WH-1000XM3", "XM3"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#C59B6D" },
+        { "id": "silver", "label": "Plata", "hex": "#D6D4CE", "accentHex": "#B0AAA0" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "sony-wh-ch720n",
+      "displayName": "Sony WH-CH720N",
+      "vendor": "Sony",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2023,
+      "btNamePatterns": ["WH-CH720N", "CH720N"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "sony-wf-1000xm4",
+      "displayName": "Sony WF-1000XM4",
+      "vendor": "Sony",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2021,
+      "btNamePatterns": ["WF-1000XM4"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "silver", "label": "Plata", "hex": "#D6D4CE", "accentHex": "#B0AAA0" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "sony-linkbuds-s",
+      "displayName": "Sony LinkBuds S",
+      "vendor": "Sony",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2022,
+      "btNamePatterns": ["LinkBuds S", "LinkBuds"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "green", "label": "Verde", "hex": "#3E5B4A", "accentHex": "#6F9A82" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "bose-qc45",
+      "displayName": "Bose QuietComfort 45",
+      "vendor": "Bose",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2021,
+      "btNamePatterns": ["Bose QuietComfort 45", "QuietComfort 45", "Bose QC45", "QC45"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "bose-qc35-ii",
+      "displayName": "Bose QuietComfort 35 II",
+      "vendor": "Bose",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2017,
+      "btNamePatterns": ["Bose QC35 II", "Bose QC35", "QC35 II", "QC35"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "silver", "label": "Plata", "hex": "#D6D4CE", "accentHex": "#B0AAA0" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "bose-nc-700",
+      "displayName": "Bose Noise Cancelling 700",
+      "vendor": "Bose",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2019,
+      "btNamePatterns": ["Noise Cancelling Headphones 700", "NC 700", "NC700"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "silver", "label": "Plata", "hex": "#D6D4CE", "accentHex": "#B0AAA0" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "beats-solo-4",
+      "displayName": "Beats Solo 4",
+      "vendor": "Beats",
+      "kind": "over-ear",
+      "silhouette": "over-ear-oval",
+      "year": 2024,
+      "btNamePatterns": ["Beats Solo 4", "Solo 4"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "pink", "label": "Rosa", "hex": "#C8AEB0", "accentHex": "#9E7E80" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" }
+      ],
+      "listeningModes": []
+    },
+    {
+      "id": "beats-solo-3",
+      "displayName": "Beats Solo3",
+      "vendor": "Beats",
+      "kind": "over-ear",
+      "silhouette": "over-ear-oval",
+      "year": 2016,
+      "btNamePatterns": ["Beats Solo3", "Solo3"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "red", "label": "Rojo", "hex": "#A8322D", "accentHex": "#D0645E" },
+        { "id": "silver", "label": "Plata", "hex": "#D6D4CE", "accentHex": "#B0AAA0" }
+      ],
+      "listeningModes": []
+    },
+    {
+      "id": "beats-powerbeats-pro-2",
+      "displayName": "Powerbeats Pro 2",
+      "vendor": "Beats",
+      "kind": "earbuds",
+      "silhouette": "stem-earbuds",
+      "year": 2025,
+      "btNamePatterns": ["Powerbeats Pro 2"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" },
+        { "id": "sand", "label": "Arenisca", "hex": "#B8ABA0", "accentHex": "#8F7D6E" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "beats-studio-buds-plus",
+      "displayName": "Beats Studio Buds +",
+      "vendor": "Beats",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2023,
+      "btNamePatterns": ["Beats Studio Buds +", "Studio Buds +", "Studio Buds Plus"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "sand", "label": "Arenisca", "hex": "#B8ABA0", "accentHex": "#8F7D6E" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "beats-fit-pro",
+      "displayName": "Beats Fit Pro",
+      "vendor": "Beats",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2021,
+      "btNamePatterns": ["Beats Fit Pro", "Fit Pro"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "purple", "label": "Morado", "hex": "#6C5B8C", "accentHex": "#9A88BD" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "jbl-tune-770nc",
+      "displayName": "JBL Tune 770NC",
+      "vendor": "JBL",
+      "kind": "over-ear",
+      "silhouette": "over-ear-oval",
+      "year": 2023,
+      "btNamePatterns": ["JBL Tune 770NC", "Tune 770NC"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "jbl-tour-one-m2",
+      "displayName": "JBL Tour One M2",
+      "vendor": "JBL",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2023,
+      "btNamePatterns": ["Tour One M2"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "sand", "label": "Arenisca", "hex": "#B8ABA0", "accentHex": "#8F7D6E" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"]
+    },
+    {
+      "id": "jbl-tune-buds",
+      "displayName": "JBL Tune Buds",
+      "vendor": "JBL",
+      "kind": "earbuds",
+      "silhouette": "stem-earbuds",
+      "year": 2024,
+      "btNamePatterns": ["JBL Tune Buds", "Tune Buds"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "sennheiser-accentum",
+      "displayName": "Sennheiser Accentum",
+      "vendor": "Sennheiser",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2023,
+      "btNamePatterns": ["Accentum"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "sennheiser-momentum-tw4",
+      "displayName": "Sennheiser Momentum TW 4",
+      "vendor": "Sennheiser",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2024,
+      "btNamePatterns": ["Momentum True Wireless 4", "MOMENTUM TW 4", "MTW4"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"]
+    },
+    {
+      "id": "galaxy-buds2-pro",
+      "displayName": "Galaxy Buds2 Pro",
+      "vendor": "Samsung",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2022,
+      "btNamePatterns": ["Galaxy Buds2 Pro", "Buds2 Pro"],
+      "colors": [
+        { "id": "graphite", "label": "Grafito", "hex": "#2B2D33", "accentHex": "#4B4F5A" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "purple", "label": "Morado", "hex": "#6C5B8C", "accentHex": "#9A88BD" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "galaxy-buds-fe",
+      "displayName": "Galaxy Buds FE",
+      "vendor": "Samsung",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2023,
+      "btNamePatterns": ["Galaxy Buds FE", "Buds FE"],
+      "colors": [
+        { "id": "graphite", "label": "Grafito", "hex": "#2B2D33", "accentHex": "#4B4F5A" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "jabra-elite-85h",
+      "displayName": "Jabra Elite 85h",
+      "vendor": "Jabra",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2018,
+      "btNamePatterns": ["Elite 85h"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "sand", "label": "Arenisca", "hex": "#B8ABA0", "accentHex": "#8F7D6E" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "jabra-evolve2-85",
+      "displayName": "Jabra Evolve2 85",
+      "vendor": "Jabra",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2020,
+      "btNamePatterns": ["Evolve2 85"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "jabra-elite-10",
+      "displayName": "Jabra Elite 10",
+      "vendor": "Jabra",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2023,
+      "btNamePatterns": ["Jabra Elite 10", "Elite 10"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "sand", "label": "Arenisca", "hex": "#B8ABA0", "accentHex": "#8F7D6E" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"]
+    },
+    {
+      "id": "pixel-buds-pro",
+      "displayName": "Pixel Buds Pro",
+      "vendor": "Google",
+      "kind": "earbuds",
+      "silhouette": "stem-earbuds",
+      "year": 2022,
+      "btNamePatterns": ["Pixel Buds Pro"],
+      "colors": [
+        { "id": "grey", "label": "Gris", "hex": "#6C7078", "accentHex": "#9499A3" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "green", "label": "Verde", "hex": "#3E5B4A", "accentHex": "#6F9A82" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "pixel-buds-pro-2",
+      "displayName": "Pixel Buds Pro 2",
+      "vendor": "Google",
+      "kind": "earbuds",
+      "silhouette": "stem-earbuds",
+      "year": 2024,
+      "btNamePatterns": ["Pixel Buds Pro 2"],
+      "colors": [
+        { "id": "grey", "label": "Gris", "hex": "#6C7078", "accentHex": "#9499A3" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "green", "label": "Verde", "hex": "#3E5B4A", "accentHex": "#6F9A82" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"]
+    },
+    {
+      "id": "nothing-ear-2",
+      "displayName": "Nothing Ear (2)",
+      "vendor": "Nothing",
+      "kind": "earbuds",
+      "silhouette": "stem-earbuds",
+      "year": 2023,
+      "btNamePatterns": ["Nothing Ear (2)", "Ear (2)"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "soundcore-space-one",
+      "displayName": "Soundcore Space One",
+      "vendor": "Soundcore",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2023,
+      "btNamePatterns": ["Space One"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"]
+    },
+    {
+      "id": "soundcore-life-q30",
+      "displayName": "Soundcore Life Q30",
+      "vendor": "Soundcore",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2020,
+      "btNamePatterns": ["Life Q30"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" },
+        { "id": "pink", "label": "Rosa", "hex": "#C8AEB0", "accentHex": "#9E7E80" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "soundcore-liberty-4-nc",
+      "displayName": "Soundcore Liberty 4 NC",
+      "vendor": "Soundcore",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2023,
+      "btNamePatterns": ["Liberty 4 NC"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "adaptive", "off"]
+    },
+    {
+      "id": "marshall-major-v",
+      "displayName": "Marshall Major V",
+      "vendor": "Marshall",
+      "kind": "over-ear",
+      "silhouette": "over-ear-oval",
+      "year": 2023,
+      "btNamePatterns": ["Major V"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "sand", "label": "Arenisca", "hex": "#B8ABA0", "accentHex": "#8F7D6E" }
+      ],
+      "listeningModes": []
+    },
+    {
+      "id": "marshall-monitor-ii",
+      "displayName": "Marshall Monitor II ANC",
+      "vendor": "Marshall",
+      "kind": "over-ear",
+      "silhouette": "over-ear-oval",
+      "year": 2020,
+      "btNamePatterns": ["Monitor II"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "bw-px7-s3",
+      "displayName": "Bowers & Wilkins Px7 S3",
+      "vendor": "Bowers & Wilkins",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2023,
+      "btNamePatterns": ["Px7 S3", "Px7"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "grey", "label": "Gris", "hex": "#6C7078", "accentHex": "#9499A3" },
+        { "id": "blue", "label": "Azul", "hex": "#2F435A", "accentHex": "#526E8C" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "bw-px8",
+      "displayName": "Bowers & Wilkins Px8",
+      "vendor": "Bowers & Wilkins",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2022,
+      "btNamePatterns": ["Px8"],
+      "colors": [
+        { "id": "black", "label": "Negro", "hex": "#1C1D21", "accentHex": "#3A3D45" },
+        { "id": "sand", "label": "Arenisca", "hex": "#B8ABA0", "accentHex": "#8F7D6E" }
+      ],
+      "listeningModes": ["noise-cancellation", "transparency", "off"]
+    },
+    {
+      "id": "generic-earbuds",
+      "displayName": "Auriculares",
+      "vendor": "Genérico",
+      "kind": "earbuds",
+      "silhouette": "bud-in-ear",
+      "year": 2026,
+      "generic": true,
+      "colors": [
+        { "id": "graphite", "label": "Grafito", "hex": "#2B2D33", "accentHex": "#4B4F5A" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "silver", "label": "Plata", "hex": "#D6D4CE", "accentHex": "#B0AAA0" },
+        { "id": "navy", "label": "Azul marino", "hex": "#232F46", "accentHex": "#6E82A6" }
+      ],
+      "listeningModes": []
+    },
+    {
+      "id": "generic-headphones",
+      "displayName": "Cascos",
+      "vendor": "Genérico",
+      "kind": "over-ear",
+      "silhouette": "over-ear-sculpted",
+      "year": 2026,
+      "generic": true,
+      "colors": [
+        { "id": "graphite", "label": "Grafito", "hex": "#2B2D33", "accentHex": "#4B4F5A" },
+        { "id": "white", "label": "Blanco", "hex": "#F1F1F3", "accentHex": "#CBCDD4" },
+        { "id": "silver", "label": "Plata", "hex": "#D6D4CE", "accentHex": "#B0AAA0" },
+        { "id": "navy", "label": "Azul marino", "hex": "#232F46", "accentHex": "#6E82A6" }
+      ],
+      "listeningModes": []
     }
   ]
 }

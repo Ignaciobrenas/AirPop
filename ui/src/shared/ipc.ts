@@ -5,6 +5,8 @@ export const IPC_EVENTS = {
   LISTENING_MODE: "device://listening-mode",
   DISCONNECTED: "device://disconnected",
   SETTINGS: "app://settings",
+  EQ: "device://eq",
+  APO_STATUS: "device://apo-status",
 } as const;
 
 export const IPC_COMMANDS = {
@@ -15,7 +17,33 @@ export const IPC_COMMANDS = {
   SIMULATE: "simulate",
   SET_CURSOR_PASSTHROUGH: "set_popup_cursor_passthrough",
   CONNECT_DEVICE: "connect_device",
+  GET_EQ_PRESETS: "get_eq_presets",
+  GET_EQ_PROFILE: "get_eq_profile",
+  SET_EQ_PROFILE: "set_eq_profile",
+  GET_APO_STATUS: "get_apo_status",
+  SYNC_APO_CONFIG: "sync_apo_config",
+  SET_FORM_FACTOR: "set_form_factor",
 } as const;
+
+export type FormFactor = "earbuds" | "over-ear";
+
+export interface PresetDefinition {
+  id: string;
+  label: string;
+  gains: number[];
+}
+
+export interface EqProfile {
+  enabled: boolean;
+  presetId: string;
+  gainsDb: number[];
+}
+
+export interface ApoStatus {
+  installed: boolean;
+  linked: boolean;
+  configDir: string | null;
+}
 
 export type ListeningMode =
   | "noise-cancellation"

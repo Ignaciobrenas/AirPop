@@ -1,12 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use airpop_lib::ble::apple_proximity::BatteryState;
+use airpop_lib::commands::*;
 use airpop_lib::ipc::SimulationScenario;
 use airpop_lib::tray::{render_tray_icon_rgba, TRAY_ICON_SIZE};
-use airpop_lib::{
-    dismiss_popup, get_settings, set_listening_mode, set_popup_cursor_passthrough, set_settings,
-    simulate, trigger_simulation, AppRuntimeState, CliArgs,
-};
+use airpop_lib::{trigger_simulation, AppRuntimeState, CliArgs};
 use clap::Parser;
 use std::sync::Mutex;
 use tauri::image::Image;
@@ -85,7 +83,7 @@ fn main() {
                             guard.settings.do_not_disturb = !guard.settings.do_not_disturb;
                             let dnd = guard.settings.do_not_disturb;
                             guard.state_machine.set_do_not_disturb(dnd);
-                        }
+                        };
                     }
                     "settings" => {
                         if let Some(flyout) = app_handle.get_webview_window("flyout") {
@@ -148,7 +146,13 @@ fn main() {
             set_settings,
             dismiss_popup,
             set_popup_cursor_passthrough,
-            simulate
+            simulate,
+            get_eq_presets,
+            get_eq_profile,
+            set_eq_profile,
+            get_apo_status,
+            sync_apo_config,
+            set_form_factor
         ])
         .run(tauri::generate_context!())
         .expect("error while running AirPop tauri application");

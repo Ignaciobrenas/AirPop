@@ -1,3 +1,6 @@
+.cargo/config.toml
+.cargo/
+
 PLANS/
 /PLANS
 
@@ -34,3 +37,12 @@ Desktop.ini
 .env
 .env.local
 .env.*.local
+
+*.dll
+*.o
+*.res
+*.manifest
+src-tauri/gen/
+src-tauri/airpop_res.o
+src-tauri/airpop.rc
+src-tauri/airpop.manifest

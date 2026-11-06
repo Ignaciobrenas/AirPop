@@ -1,5 +1,14 @@
 use crate::aap::ListeningMode;
+use crate::device::classify::{guess_from_name, FormFactor};
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ListeningControl {
+    #[default]
+    None,
+    Aap,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,13 +43,20 @@ pub struct ModelDefinition {
     pub silhouette: String,
     pub year: u16,
     #[serde(default)]
+    pub generic: bool,
+    #[serde(default)]
+    pub listening_control: ListeningControl,
+    #[serde(default)]
     pub ble_company_ids: Vec<u16>,
+    #[serde(default)]
     pub ble_model_ids: Vec<u16>,
     #[serde(default)]
     pub bt_name_patterns: Vec<String>,
     pub colors: Vec<ColorVariant>,
+    #[serde(default)]
     pub listening_modes: Vec<ListeningMode>,
-    pub assets: ModelAssets,
+    #[serde(default)]
+    pub assets: Option<ModelAssets>,
 }
 
 fn default_vendor() -> String {
@@ -54,6 +70,14 @@ fn default_silhouette() -> String {
 impl ModelDefinition {
     pub fn is_over_ear(&self) -> bool {
         self.kind == "over-ear"
+    }
+
+    pub fn form_factor(&self) -> FormFactor {
+        FormFactor::from_catalog_kind(&self.kind)
+    }
+
+    pub fn supports_listening_control(&self) -> bool {
+        self.listening_control == ListeningControl::Aap && !self.listening_modes.is_empty()
     }
 }
 
@@ -72,6 +96,21 @@ impl Default for ModelCatalog {
     fn default() -> Self {
         Self::embedded()
     }
+}
+
+const SHORT_PATTERN_LEN: usize = 5;
+
+fn pattern_matches(upper_name: &str, pattern: &str) -> bool {
+    let pattern = pattern.trim().to_ascii_uppercase();
+    if pattern.is_empty() {
+        return false;
+    }
+    if pattern.len() >= SHORT_PATTERN_LEN {
+        return upper_name.contains(&pattern);
+    }
+    upper_name
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .any(|token| token == pattern)
 }
 
 impl ModelCatalog {
@@ -121,55 +160,50 @@ impl ModelCatalog {
             .or_else(|| self.find_by_ble_model_id(ble_model_id))
     }
 
+    pub fn find_generic(&self, form: FormFactor) -> Option<&ModelDefinition> {
+        self.models
+            .iter()
+            .find(|m| m.generic && m.form_factor() == form)
+    }
+
     pub fn find_by_bt_name(&self, bt_name: &str) -> Option<&ModelDefinition> {
         let upper = bt_name.trim().to_ascii_uppercase();
         if upper.is_empty() {
             return None;
         }
+        let guessed_vendor = guess_from_name(bt_name).vendor;
 
-        if let Some(exact) = self.models.iter().find(|m| {
-            m.bt_name_patterns
-                .iter()
-                .any(|pat| upper.contains(&pat.to_ascii_uppercase()))
-        }) {
-            return Some(exact);
-        }
+        self.models
+            .iter()
+            .filter(|m| !m.generic)
+            .filter(|m| match guessed_vendor {
+                Some(vendor) => m.vendor.eq_ignore_ascii_case(vendor),
+                None => true,
+            })
+            .filter_map(|m| {
+                m.bt_name_patterns
+                    .iter()
+                    .filter(|pattern| pattern_matches(&upper, pattern))
+                    .map(|pattern| pattern.trim().len())
+                    .max()
+                    .map(|score| (score, m))
+            })
+            .max_by_key(|(score, _)| *score)
+            .map(|(_, model)| model)
+    }
 
-        if upper.contains("SONY") || upper.contains("WH-") || upper.contains("1000X") {
-            if upper.contains("WF-") {
-                return self.find_by_id("sony-wf-1000xm5");
+    pub fn resolve_for_bt_name(
+        &self,
+        bt_name: &str,
+        form_override: Option<FormFactor>,
+    ) -> Option<&ModelDefinition> {
+        if let Some(model) = self.find_by_bt_name(bt_name) {
+            if form_override.is_none_or(|form| form == model.form_factor()) {
+                return Some(model);
             }
-            return self.find_by_id("sony-wh-1000xm5");
         }
-
-        if upper.contains("BOSE") || upper.contains("QUIETCOMFORT") || upper.contains("QC") {
-            if upper.contains("EARBUD") || upper.contains("BUDS") {
-                return self.find_by_id("bose-qc-ultra-earbuds");
-            }
-            return self.find_by_id("bose-qc-ultra-headphones");
-        }
-
-        if upper.contains("SENNHEISER") || upper.contains("MOMENTUM") {
-            return self.find_by_id("sennheiser-momentum-4");
-        }
-
-        if upper.contains("BEATS") || upper.contains("STUDIO") {
-            return self.find_by_id("beats-studio-pro");
-        }
-
-        if upper.contains("GALAXY") || upper.contains("BUDS3") {
-            return self.find_by_id("galaxy-buds3-pro");
-        }
-
-        if upper.contains("MAX")
-            || upper.contains("HEADPHONE")
-            || upper.contains("DIADEMA")
-            || upper.contains("OVER-EAR")
-        {
-            return self.find_by_id("airpods-max-2");
-        }
-
-        None
+        let form = form_override.unwrap_or_else(|| guess_from_name(bt_name).form_factor);
+        self.find_generic(form)
     }
 
     pub fn resolve_color_id(&self, model: &ModelDefinition, ble_color: u8) -> String {
@@ -224,6 +258,124 @@ mod tests {
             .expect("detects Sennheiser");
         assert_eq!(senn.id, "sennheiser-momentum-4");
         assert!(senn.is_over_ear());
+    }
+
+    #[test]
+    fn test_catalog_covers_requested_brands_and_wider_model_range() {
+        let catalog = ModelCatalog::embedded();
+        let expectations = [
+            ("WH-1000XM6", "sony-wh-1000xm6"),
+            ("WH-1000XM4", "sony-wh-1000xm4"),
+            ("WH-1000XM3", "sony-wh-1000xm3"),
+            ("WF-1000XM4", "sony-wf-1000xm4"),
+            ("Bose QuietComfort 45", "bose-qc45"),
+            ("Bose QC35 II", "bose-qc35-ii"),
+            ("Bose QuietComfort Ultra Earbuds", "bose-qc-ultra-earbuds"),
+            ("Beats Studio Pro", "beats-studio-pro"),
+            ("Beats Solo 4", "beats-solo-4"),
+            ("Powerbeats Pro 2", "beats-powerbeats-pro-2"),
+            ("Beats Studio Buds +", "beats-studio-buds-plus"),
+            ("JBL Tune 770NC", "jbl-tune-770nc"),
+            ("Galaxy Buds2 Pro", "galaxy-buds2-pro"),
+            ("Jabra Elite 85h", "jabra-elite-85h"),
+            ("Pixel Buds Pro 2", "pixel-buds-pro-2"),
+            ("Nothing Ear (2)", "nothing-ear-2"),
+            ("Soundcore Space One", "soundcore-space-one"),
+        ];
+        for (name, expected) in expectations {
+            let found = catalog
+                .find_by_bt_name(name)
+                .unwrap_or_else(|| panic!("no model for {name}"));
+            assert_eq!(found.id, expected, "model for {name}");
+        }
+    }
+
+    #[test]
+    fn test_unknown_devices_resolve_to_generic_models_by_form_factor() {
+        let catalog = ModelCatalog::embedded();
+
+        let buds = catalog
+            .resolve_for_bt_name("QCY T13 ANC", None)
+            .expect("generic earbuds");
+        assert!(buds.generic);
+        assert_eq!(buds.id, "generic-earbuds");
+
+        let headset = catalog
+            .resolve_for_bt_name("Logitech Zone Vibe 125", None)
+            .expect("generic headphones");
+        assert_eq!(headset.id, "generic-headphones");
+
+        let mystery = catalog
+            .resolve_for_bt_name("BT-5000", Some(FormFactor::OverEar))
+            .expect("override form factor");
+        assert_eq!(mystery.id, "generic-headphones");
+
+        let overridden = catalog
+            .resolve_for_bt_name("WH-1000XM5", Some(FormFactor::Earbuds))
+            .expect("override beats catalog match");
+        assert_eq!(overridden.id, "generic-earbuds");
+
+        assert!(catalog.find_by_bt_name("Maxell BT").is_none());
+        assert!(catalog.find_by_bt_name("").is_none());
+    }
+
+    #[test]
+    fn test_vendor_guard_prevents_cross_brand_matches() {
+        let catalog = ModelCatalog::embedded();
+        let jbl_max = catalog.find_by_bt_name("JBL Tour One Max");
+        assert!(jbl_max.is_none_or(|m| m.vendor == "JBL"));
+        let sony_pro = catalog.find_by_bt_name("Sony WH-CH720N Pro 3");
+        assert!(sony_pro.is_none_or(|m| m.vendor == "Sony"));
+    }
+
+    #[test]
+    fn test_only_apple_family_models_expose_listening_control() {
+        let catalog = ModelCatalog::embedded();
+        let pro3 = catalog.find_by_id("airpods-pro-3").expect("pro 3");
+        assert!(pro3.supports_listening_control());
+        let xm5 = catalog.find_by_id("sony-wh-1000xm5").expect("xm5");
+        assert!(!xm5.supports_listening_control());
+        assert!(!xm5.listening_modes.is_empty());
+        for generic in catalog.models().iter().filter(|m| m.generic) {
+            assert!(!generic.supports_listening_control());
+        }
+    }
+
+    #[test]
+    fn test_catalog_integrity() {
+        let catalog = ModelCatalog::embedded();
+        assert!(catalog.models().len() >= 30);
+        assert!(catalog.find_generic(FormFactor::Earbuds).is_some());
+        assert!(catalog.find_generic(FormFactor::OverEar).is_some());
+        let mut ids: Vec<_> = catalog.models().iter().map(|m| m.id.clone()).collect();
+        ids.sort();
+        let before = ids.len();
+        ids.dedup();
+        assert_eq!(before, ids.len(), "duplicate model ids");
+        for model in catalog.models() {
+            assert!(!model.colors.is_empty(), "{} has no colors", model.id);
+            let mut color_ids: Vec<_> = model.colors.iter().map(|c| c.id.clone()).collect();
+            color_ids.sort();
+            let n = color_ids.len();
+            color_ids.dedup();
+            assert_eq!(n, color_ids.len(), "duplicate colors in {}", model.id);
+            assert!(
+                model.kind == "earbuds" || model.kind == "over-ear",
+                "bad kind in {}",
+                model.id
+            );
+            assert!(
+                [
+                    "stem-earbuds",
+                    "bud-in-ear",
+                    "over-ear-oval",
+                    "over-ear-sculpted"
+                ]
+                .contains(&model.silhouette.as_str()),
+                "bad silhouette in {}",
+                model.id
+            );
+        }
     }
 
     #[test]

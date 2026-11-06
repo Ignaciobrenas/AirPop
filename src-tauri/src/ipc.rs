@@ -1,5 +1,8 @@
 use crate::aap::ListeningMode;
 use crate::ble::apple_proximity::{BatteryState, ChargingState};
+use crate::device::classify::FormFactor;
+use crate::eq::apo::ApoStatus;
+use crate::eq::EqProfile;
 use crate::settings::AppSettings;
 use serde::{Deserialize, Serialize};
 
@@ -9,6 +12,8 @@ pub const EVENT_BATTERY: &str = "device://battery";
 pub const EVENT_LISTENING_MODE: &str = "device://listening-mode";
 pub const EVENT_DISCONNECTED: &str = "device://disconnected";
 pub const EVENT_SETTINGS: &str = "app://settings";
+pub const EVENT_EQ: &str = "device://eq";
+pub const EVENT_APO_STATUS: &str = "device://apo-status";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -90,4 +95,42 @@ pub struct SetListeningModeArgs {
 #[serde(rename_all = "camelCase")]
 pub struct SettingsPayload {
     pub settings: AppSettings,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EqEventPayload {
+    pub profile: EqProfile,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApoStatusEventPayload {
+    pub status: ApoStatus,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetFormFactorArgs {
+    pub device_name: String,
+    pub form_factor: FormFactor,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetEqProfileArgs {
+    pub profile: EqProfile,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetEqGainArgs {
+    pub band_index: usize,
+    pub gain_db: f32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectEqPresetArgs {
+    pub preset_id: String,
 }

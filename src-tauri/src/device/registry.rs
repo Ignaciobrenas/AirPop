@@ -1,5 +1,6 @@
 use crate::ble::apple_proximity::{BatteryState, ChargingState, ProximityPayload};
 use crate::device::catalog::ModelCatalog;
+use crate::device::classify::{guess_from_name, FormFactor};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -27,6 +28,7 @@ pub struct TrackedDevice {
 pub struct DeviceRegistry {
     catalog: ModelCatalog,
     devices: HashMap<String, TrackedDevice>,
+    form_overrides: HashMap<String, FormFactor>,
 }
 
 impl DeviceRegistry {
@@ -34,6 +36,7 @@ impl DeviceRegistry {
         Self {
             catalog,
             devices: HashMap::new(),
+            form_overrides: HashMap::new(),
         }
     }
 
@@ -43,6 +46,28 @@ impl DeviceRegistry {
 
     pub fn tracked_count(&self) -> usize {
         self.devices.len()
+    }
+
+    pub fn set_form_override(&mut self, device_name: &str, form: FormFactor) {
+        self.form_overrides.insert(device_name.to_string(), form);
+        for dev in self.devices.values_mut() {
+            if dev.display_name == device_name {
+                dev.kind = form.catalog_kind().to_string();
+                if form == FormFactor::OverEar {
+                    dev.silhouette = "over-ear-sculpted".to_string();
+                    dev.battery.case = None;
+                } else {
+                    dev.silhouette = "bud-in-ear".to_string();
+                    if dev.battery.case.is_none() {
+                        dev.battery.case = Some(76);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn form_override(&self, device_name: &str) -> Option<FormFactor> {
+        self.form_overrides.get(device_name).copied()
     }
 
     fn evict_stale_and_bound(&mut self, now_ms: u64) {
@@ -115,30 +140,49 @@ impl DeviceRegistry {
     pub fn ingest_bt_connection(&mut self, bt_name: &str, timestamp_ms: u64) -> TrackedDevice {
         self.evict_stale_and_bound(timestamp_ms);
 
+        let override_form = self.form_overrides.get(bt_name).copied();
         let model_def = self
             .catalog
-            .find_by_bt_name(bt_name)
+            .resolve_for_bt_name(bt_name, override_form)
             .or_else(|| self.catalog.find_by_id("airpods-pro-3"));
 
         let (catalog_model_id, display_name, vendor, kind, silhouette, color_id) = match model_def {
-            Some(def) => (
-                def.id.clone(),
-                def.display_name.clone(),
-                def.vendor.clone(),
-                def.kind.clone(),
-                def.silhouette.clone(),
-                def.colors
-                    .first()
-                    .map(|c| c.id.clone())
-                    .unwrap_or_else(|| "black".to_string()),
-            ),
+            Some(def) => {
+                let disp = if def.generic {
+                    bt_name.to_string()
+                } else {
+                    def.display_name.clone()
+                };
+                let vend = if def.generic {
+                    guess_from_name(bt_name)
+                        .vendor
+                        .unwrap_or(&def.vendor)
+                        .to_string()
+                } else {
+                    def.vendor.clone()
+                };
+                (
+                    def.id.clone(),
+                    disp,
+                    vend,
+                    def.kind.clone(),
+                    def.silhouette.clone(),
+                    def.colors
+                        .first()
+                        .map(|c| c.id.clone())
+                        .unwrap_or_else(|| "black".to_string()),
+                )
+            }
             None => (
-                "airpods-pro-3".to_string(),
+                "generic-earbuds".to_string(),
                 bt_name.to_string(),
-                "GenericPro".to_string(),
+                guess_from_name(bt_name)
+                    .vendor
+                    .unwrap_or("Genérico")
+                    .to_string(),
                 "earbuds".to_string(),
-                "stem-earbuds".to_string(),
-                "white".to_string(),
+                "bud-in-ear".to_string(),
+                "graphite".to_string(),
             ),
         };
 
@@ -204,5 +248,20 @@ mod tests {
             reg.ingest_ble(&payload, -45, 1000 + (i as u64) * 10);
         }
         assert!(reg.tracked_count() <= MAX_TRACKED_DEVICES);
+    }
+
+    #[test]
+    fn test_ingest_generic_device_and_form_override() {
+        let mut reg = DeviceRegistry::new(ModelCatalog::embedded());
+        let dev = reg.ingest_bt_connection("Unknown TWS Pro", 2000);
+        assert_eq!(dev.kind, "earbuds");
+        assert_eq!(dev.catalog_model_id, "generic-earbuds");
+        assert_eq!(dev.display_name, "Unknown TWS Pro");
+
+        reg.set_form_override("Unknown TWS Pro", FormFactor::OverEar);
+        let updated = reg.ingest_bt_connection("Unknown TWS Pro", 3000);
+        assert_eq!(updated.kind, "over-ear");
+        assert_eq!(updated.catalog_model_id, "generic-headphones");
+        assert_eq!(updated.battery.case, None);
     }
 }

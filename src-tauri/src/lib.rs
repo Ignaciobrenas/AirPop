@@ -1,7 +1,9 @@
 pub mod aap;
 pub mod ble;
 pub mod bt;
+pub mod commands;
 pub mod device;
+pub mod eq;
 pub mod ipc;
 pub mod settings;
 pub mod state;
@@ -13,9 +15,8 @@ use crate::ble::apple_proximity::{BatteryState, ChargingState};
 use crate::device::catalog::ModelCatalog;
 use crate::device::registry::DeviceRegistry;
 use crate::ipc::{
-    BatteryEventPayload, CaseOpenEventPayload, ConnectedEventPayload, ListeningModeEventPayload,
-    SimulationScenario, EVENT_BATTERY, EVENT_CASE_OPEN, EVENT_CONNECTED, EVENT_LISTENING_MODE,
-    EVENT_SETTINGS,
+    BatteryEventPayload, CaseOpenEventPayload, ConnectedEventPayload, SimulationScenario,
+    EVENT_BATTERY, EVENT_CASE_OPEN, EVENT_CONNECTED,
 };
 use crate::settings::AppSettings;
 use crate::state::StateMachine;
@@ -40,16 +41,23 @@ pub struct AppRuntimeState {
     pub registry: DeviceRegistry,
     pub aap: AapController,
     pub toast_limiter: ToastLimiter,
+    pub eq_presets: crate::eq::EqPresets,
+    pub eq_profile: crate::eq::EqProfile,
+    pub apo_dir: Option<std::path::PathBuf>,
 }
 
 impl AppRuntimeState {
     pub fn new(simulated: bool) -> Self {
+        let apo_dir = crate::eq::apo::locate_config_dir();
         Self {
             settings: AppSettings::default(),
             state_machine: StateMachine::new(),
             registry: DeviceRegistry::new(ModelCatalog::embedded()),
             aap: AapController::new(simulated),
             toast_limiter: ToastLimiter::new(),
+            eq_presets: crate::eq::EqPresets::embedded(),
+            eq_profile: crate::eq::EqProfile::default(),
+            apo_dir,
         }
     }
 }
@@ -242,83 +250,10 @@ pub fn trigger_simulation(
     }
 }
 
-#[tauri::command]
-pub fn set_listening_mode(
-    app: AppHandle,
-    state: tauri::State<'_, Mutex<AppRuntimeState>>,
-    mode: ListeningMode,
-) -> Result<(), String> {
-    if let Ok(mut guard) = state.lock() {
-        guard
-            .aap
-            .set_listening_mode(mode)
-            .map_err(|e| e.to_string())?;
-        let _ = app.emit(EVENT_LISTENING_MODE, ListeningModeEventPayload { mode });
-    }
-    Ok(())
-}
-
-#[tauri::command]
-pub fn get_settings(state: tauri::State<'_, Mutex<AppRuntimeState>>) -> AppSettings {
-    state.lock().map(|g| g.settings.clone()).unwrap_or_default()
-}
-
-#[tauri::command]
-pub fn set_settings(
-    app: AppHandle,
-    state: tauri::State<'_, Mutex<AppRuntimeState>>,
-    settings: AppSettings,
-) -> AppSettings {
-    let clean = sanitize_settings(settings);
-    if let Ok(mut guard) = state.lock() {
-        guard.state_machine.set_do_not_disturb(clean.do_not_disturb);
-        guard.settings = clean.clone();
-    }
-    let _ = app.emit(EVENT_SETTINGS, clean.clone());
-    clean
-}
-
-#[tauri::command]
-pub fn dismiss_popup(app: AppHandle, state: tauri::State<'_, Mutex<AppRuntimeState>>) {
-    if let Ok(mut guard) = state.lock() {
-        guard.state_machine.dismiss();
-    }
-    if let Some(window) = app.get_webview_window("popup") {
-        let _ = window.set_ignore_cursor_events(true);
-        let _ = window.hide();
-    }
-}
-
-#[tauri::command]
-pub fn set_popup_cursor_passthrough(app: AppHandle, ignore: bool) {
-    if let Some(window) = app.get_webview_window("popup") {
-        let _ = window.set_ignore_cursor_events(ignore);
-    }
-}
-
-#[tauri::command]
-pub fn simulate(
-    app: AppHandle,
-    state: tauri::State<'_, Mutex<AppRuntimeState>>,
-    model_id: String,
-    color: String,
-    scenario: SimulationScenario,
-) -> Result<(), String> {
-    if model_id.len() > 64 || color.len() > 32 {
-        return Err("invalid model or color identifier length".to_string());
-    }
-    if let Ok(guard) = state.lock() {
-        if guard.registry.catalog().find_by_id(&model_id).is_none() {
-            return Err("unknown catalog model_id".to_string());
-        }
-    }
-    trigger_simulation(&app, &state, &model_id, &color, scenario);
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::sanitize_settings;
+    use crate::settings::AppSettings;
 
     #[test]
     fn test_sanitize_settings_rejects_invalid_monitor_names() {
