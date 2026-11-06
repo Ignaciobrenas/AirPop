@@ -64,6 +64,36 @@ pub fn set_popup_cursor_passthrough(app: AppHandle, ignore: bool) {
     }
 }
 
+pub fn validate_device_name(name: &str) -> Result<&str, String> {
+    let trimmed = name.trim();
+    if trimmed.is_empty() || trimmed.len() > 128 {
+        return Err("device_name must be between 1 and 128 characters".to_string());
+    }
+    if trimmed.chars().any(|c| c.is_control()) {
+        return Err("invalid control characters in device_name".to_string());
+    }
+    Ok(trimmed)
+}
+
+pub fn validate_simulation_params(model_id: &str, color: &str) -> Result<(), String> {
+    if model_id.is_empty() || model_id.len() > 64 || color.is_empty() || color.len() > 32 {
+        return Err("invalid model or color identifier length".to_string());
+    }
+    if !model_id
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err("invalid characters in model_id".to_string());
+    }
+    if !color
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err("invalid characters in color".to_string());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub fn simulate(
     app: AppHandle,
@@ -72,9 +102,7 @@ pub fn simulate(
     color: String,
     scenario: SimulationScenario,
 ) -> Result<(), String> {
-    if model_id.len() > 64 || color.len() > 32 {
-        return Err("invalid model or color identifier length".to_string());
-    }
+    validate_simulation_params(&model_id, &color)?;
     if let Ok(guard) = state.lock() {
         if guard.registry.catalog().find_by_id(&model_id).is_none() {
             return Err("unknown catalog model_id".to_string());
@@ -171,9 +199,34 @@ pub fn set_form_factor(
     device_name: String,
     form_factor: FormFactor,
 ) -> Result<(), String> {
+    let valid_name = validate_device_name(&device_name)?;
     if let Ok(mut guard) = state.lock() {
-        guard.registry.set_form_override(&device_name, form_factor);
+        guard.registry.set_form_override(valid_name, form_factor);
     }
     let _ = app;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_device_name_validation() {
+        assert!(validate_device_name("Sony WH-1000XM5").is_ok());
+        assert!(validate_device_name("").is_err());
+        assert!(validate_device_name("   ").is_err());
+        assert!(validate_device_name(&"a".repeat(129)).is_err());
+        assert!(validate_device_name("bad\nname").is_err());
+        assert!(validate_device_name("bad\0name").is_err());
+    }
+
+    #[test]
+    fn test_simulation_params_validation() {
+        assert!(validate_simulation_params("sony-wh-1000xm5", "black").is_ok());
+        assert!(validate_simulation_params("invalid/path", "black").is_err());
+        assert!(validate_simulation_params("model", "color; rm -rf").is_err());
+        assert!(validate_simulation_params("", "white").is_err());
+        assert!(validate_simulation_params("model", "").is_err());
+    }
 }
