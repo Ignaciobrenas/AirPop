@@ -14,6 +14,15 @@ use windows::Win32::UI::WindowsAndMessaging::{
     MessageBoxW, MB_ICONASTERISK, MB_ICONINFORMATION, MB_OK,
 };
 
+#[cfg(target_os = "linux")]
+use std::env;
+#[cfg(target_os = "linux")]
+use std::fs;
+#[cfg(target_os = "linux")]
+use std::path::{Path, PathBuf};
+#[cfg(target_os = "linux")]
+use std::process::Command;
+
 #[cfg(windows)]
 pub fn handle_cli_installer_modes() -> bool {
     let args: Vec<String> = env::args().collect();
@@ -49,7 +58,42 @@ pub fn handle_cli_installer_modes() -> bool {
     false
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "linux")]
+pub fn handle_cli_installer_modes() -> bool {
+    let args: Vec<String> = env::args().collect();
+    let is_silent = args
+        .iter()
+        .any(|a| a == "--silent" || a == "-s" || a == "--quiet");
+
+    if args.iter().any(|a| a == "--uninstall") {
+        let _ = run_linux_uninstaller(is_silent);
+        return true;
+    }
+
+    let is_explicit_install = args.iter().any(|a| a == "--install" || a == "--setup");
+    let current_exe = env::current_exe().unwrap_or_default();
+    let file_stem = current_exe
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    let is_setup_name = file_stem.contains("setup") || file_stem.contains("installer");
+    let target_dir = get_linux_target_bin_dir();
+    let is_already_installed = current_exe
+        .parent()
+        .map(|p| p == target_dir.as_path())
+        .unwrap_or(false);
+
+    if (is_explicit_install || is_setup_name) && !is_already_installed {
+        let _ = run_linux_installer(&current_exe, is_silent);
+        return true;
+    }
+
+    false
+}
+
+#[cfg(not(any(windows, target_os = "linux")))]
 pub fn handle_cli_installer_modes() -> bool {
     false
 }
@@ -58,6 +102,12 @@ pub fn handle_cli_installer_modes() -> bool {
 fn get_target_install_dir() -> PathBuf {
     let local_app_data = env::var("LOCALAPPDATA").unwrap_or_else(|_| "C:\\".to_string());
     Path::new(&local_app_data).join("AirPop")
+}
+
+#[cfg(target_os = "linux")]
+fn get_linux_target_bin_dir() -> PathBuf {
+    let home = env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    Path::new(&home).join(".local").join("bin")
 }
 
 #[cfg(windows)]
@@ -215,6 +265,51 @@ fn run_installer(current_exe: &Path, is_silent: bool) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
+fn run_linux_installer(current_exe: &Path, is_silent: bool) -> Result<(), String> {
+    let home = env::var("HOME").map_err(|e| e.to_string())?;
+    let home_path = Path::new(&home);
+
+    let bin_dir = home_path.join(".local").join("bin");
+    fs::create_dir_all(&bin_dir).map_err(|e| e.to_string())?;
+    let target_exe = bin_dir.join("airpop");
+
+    let _ = Command::new("pkill").arg("-f").arg("airpop").output();
+    fs::copy(current_exe, &target_exe).map_err(|e| e.to_string())?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = fs::set_permissions(&target_exe, fs::Permissions::from_mode(0o755));
+    }
+
+    let apps_dir = home_path.join(".local").join("share").join("applications");
+    fs::create_dir_all(&apps_dir).map_err(|e| e.to_string())?;
+    let desktop_content = format!(
+        "[Desktop Entry]\nType=Application\nName=AirPop\nComment=Wireless Earbuds Overlay & Battery\nExec={}\nIcon=airpop\nTerminal=false\nCategories=AudioVideo;Audio;Utility;\nStartupNotify=false\n",
+        target_exe.to_string_lossy()
+    );
+    let _ = fs::write(apps_dir.join("airpop.desktop"), desktop_content.as_bytes());
+
+    let autostart_dir = home_path.join(".config").join("autostart");
+    fs::create_dir_all(&autostart_dir).map_err(|e| e.to_string())?;
+    let autostart_content = format!(
+        "[Desktop Entry]\nType=Application\nName=AirPop\nExec={}\nHidden=false\nNoDisplay=false\nX-GNOME-Autostart-enabled=true\n",
+        target_exe.to_string_lossy()
+    );
+    let _ = fs::write(
+        autostart_dir.join("airpop.desktop"),
+        autostart_content.as_bytes(),
+    );
+
+    let _ = Command::new(&target_exe).spawn();
+
+    if !is_silent {
+        println!("AirPop se ha instalado correctamente en ~/.local/bin/airpop.");
+    }
+    Ok(())
+}
+
 #[cfg(windows)]
 fn run_uninstaller(is_silent: bool) -> Result<(), String> {
     let _ = Command::new("taskkill")
@@ -264,6 +359,31 @@ fn run_uninstaller(is_silent: bool) -> Result<(), String> {
         );
     }
 
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn run_linux_uninstaller(is_silent: bool) -> Result<(), String> {
+    let home = env::var("HOME").unwrap_or_default();
+    let home_path = Path::new(&home);
+    let _ = Command::new("pkill").arg("-f").arg("airpop").output();
+    let _ = fs::remove_file(home_path.join(".local").join("bin").join("airpop"));
+    let _ = fs::remove_file(
+        home_path
+            .join(".local")
+            .join("share")
+            .join("applications")
+            .join("airpop.desktop"),
+    );
+    let _ = fs::remove_file(
+        home_path
+            .join(".config")
+            .join("autostart")
+            .join("airpop.desktop"),
+    );
+    if !is_silent {
+        println!("AirPop ha sido desinstalado correctamente.");
+    }
     Ok(())
 }
 

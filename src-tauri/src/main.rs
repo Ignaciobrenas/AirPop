@@ -53,7 +53,12 @@ fn main() {
                 let backend = airpop_lib::bt::windows::WindowsBtBackend::new();
                 let _ = airpop_lib::bt::BtBackend::start(&backend, tx);
             }
-            #[cfg(not(target_os = "windows"))]
+            #[cfg(target_os = "linux")]
+            {
+                let backend = airpop_lib::bt::linux::LinuxBtBackend::new();
+                let _ = airpop_lib::bt::BtBackend::start(&backend, tx);
+            }
+            #[cfg(not(any(target_os = "windows", target_os = "linux")))]
             {
                 drop(tx);
             }
