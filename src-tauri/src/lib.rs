@@ -4,6 +4,7 @@ pub mod bt;
 pub mod commands;
 pub mod device;
 pub mod eq;
+pub mod installer;
 pub mod ipc;
 pub mod settings;
 pub mod state;

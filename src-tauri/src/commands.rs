@@ -26,9 +26,15 @@ pub fn set_listening_mode(
     Ok(())
 }
 
+use tauri_plugin_autostart::ManagerExt;
+
 #[tauri::command]
-pub fn get_settings(state: State<'_, Mutex<AppRuntimeState>>) -> AppSettings {
-    state.lock().map(|g| g.settings.clone()).unwrap_or_default()
+pub fn get_settings(app: AppHandle, state: State<'_, Mutex<AppRuntimeState>>) -> AppSettings {
+    let mut s = state.lock().map(|g| g.settings.clone()).unwrap_or_default();
+    if let Ok(enabled) = app.autolaunch().is_enabled() {
+        s.autostart = enabled;
+    }
+    s
 }
 
 #[tauri::command]
@@ -41,6 +47,12 @@ pub fn set_settings(
     if let Ok(mut guard) = state.lock() {
         guard.state_machine.set_do_not_disturb(clean.do_not_disturb);
         guard.settings = clean.clone();
+    }
+    let autolaunch = app.autolaunch();
+    if clean.autostart {
+        let _ = autolaunch.enable();
+    } else {
+        let _ = autolaunch.disable();
     }
     let _ = app.emit(EVENT_SETTINGS, clean.clone());
     clean

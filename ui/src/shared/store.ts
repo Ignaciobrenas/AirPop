@@ -2,6 +2,7 @@ import { create } from "zustand";
 import catalogData from "../../../catalog/models.json";
 import eqPresetsJson from "../../../catalog/eq-presets.json";
 import { detectSystemLanguage, SupportedLanguage } from "./i18n";
+import { playConnectionChime } from "./sound";
 import {
   ApoStatus,
   AppSettings,
@@ -192,6 +193,7 @@ export const useAirPopStore = create<AirPopState>((set, get) => ({
 
   applyConnected: (payload) => {
     const model = findCatalogModel(get().models, payload.modelId);
+    playConnectionChime(get().settings.soundEnabled);
     set({
       popupMode: "connected",
       connected: true,
