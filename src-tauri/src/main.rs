@@ -20,6 +20,10 @@ fn main() {
         )
         .init();
 
+    if airpop_lib::installer::handle_cli_installer_modes() {
+        return;
+    }
+
     let cli = CliArgs::parse();
     let is_simulated = cli.simulate.is_some();
 
@@ -111,13 +115,21 @@ fn main() {
             });
 
             let settings_item = MenuItem::with_id(app, "settings", "Ajustes", true, None::<&str>)?;
+            let autostart_item =
+                MenuItem::with_id(app, "autostart", "Iniciar con Windows", true, None::<&str>)?;
             let dnd_item = MenuItem::with_id(app, "dnd", "No molestar", true, None::<&str>)?;
             let test_popup_item =
                 MenuItem::with_id(app, "test_popup", "Probar popup", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;
             let menu = Menu::with_items(
                 app,
-                &[&settings_item, &dnd_item, &test_popup_item, &quit_item],
+                &[
+                    &settings_item,
+                    &autostart_item,
+                    &dnd_item,
+                    &test_popup_item,
+                    &quit_item,
+                ],
             )?;
 
             let initial_rgba = render_tray_icon_rgba(
@@ -144,6 +156,21 @@ fn main() {
                             "white",
                             SimulationScenario::CaseOpen,
                         );
+                    }
+                    "autostart" => {
+                        let state = app_handle.state::<Mutex<AppRuntimeState>>();
+                        if let Ok(mut guard) = state.lock() {
+                            guard.settings.autostart = !guard.settings.autostart;
+                            let enabled = guard.settings.autostart;
+                            let al = tauri_plugin_autostart::ManagerExt::autolaunch(app_handle);
+                            if enabled {
+                                let _ = al.enable();
+                            } else {
+                                let _ = al.disable();
+                            }
+                            let _ = app_handle
+                                .emit(airpop_lib::ipc::EVENT_SETTINGS, guard.settings.clone());
+                        };
                     }
                     "dnd" => {
                         let state = app_handle.state::<Mutex<AppRuntimeState>>();
