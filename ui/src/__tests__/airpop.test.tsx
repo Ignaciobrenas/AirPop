@@ -9,9 +9,11 @@ import { disposeObject3D } from "../popup/Scene";
 import { resolveTransition, spring } from "../shared/spring";
 import { findCatalogModel, useAirPopStore } from "../shared/store";
 
-describe("AirPop Design System, Multi-Brand & Resource Suite", () => {
+describe("AirPop Design System, Multi-Brand, EQ & Resource Suite", () => {
   beforeEach(() => {
     useAirPopStore.setState({
+      language: "es",
+      activeTab: "device",
       popupMode: "proximity",
       modelId: "airpods-pro-3",
       deviceName: "Pro 3",
@@ -22,6 +24,19 @@ describe("AirPop Design System, Multi-Brand & Resource Suite", () => {
       aapSupported: true,
       isHovered: false,
       connected: true,
+      settings: {
+        autostart: false,
+        doNotDisturb: false,
+        lowPowerMode: false,
+        soundEnabled: true,
+        popupEnabled: true,
+        preferredMonitor: null,
+      },
+      eqProfile: {
+        enabled: false,
+        presetId: "flat",
+        gainsDb: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      },
     });
   });
 
@@ -47,14 +62,14 @@ describe("AirPop Design System, Multi-Brand & Resource Suite", () => {
     render(<Popup />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("Pro 3")).toBeInTheDocument();
-    expect(screen.getByText("In-Ear · True Wireless")).toBeInTheDocument();
+    expect(screen.getByText("In-Ear")).toBeInTheDocument();
 
     const connectBtn = screen.getByRole("button", { name: "Conectar" });
     fireEvent.click(connectBtn);
 
     expect(useAirPopStore.getState().popupMode).toBe("connected");
     expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(screen.getByText("ANC")).toBeInTheDocument();
+    expect(screen.getByText("Cancelación de ruido")).toBeInTheDocument();
 
     fireEvent.keyDown(window, { key: "Escape" });
     expect(useAirPopStore.getState().popupMode).toBe("hidden");
@@ -110,8 +125,19 @@ describe("AirPop Design System, Multi-Brand & Resource Suite", () => {
     expect(screen.getByText("Adaptativo")).toBeInTheDocument();
   });
 
-  it("renders Flyout with battery rings, model selector and settings", () => {
+  it("renders Flyout with device, equalizer and settings tabs", () => {
     render(<Flyout />);
+    expect(screen.getByText("Dispositivo")).toBeInTheDocument();
+    expect(screen.getByText("Ecualizador")).toBeInTheDocument();
+    expect(screen.getByText("Ajustes")).toBeInTheDocument();
+
+    const eqTabBtn = screen.getByRole("button", { name: "Ecualizador" });
+    fireEvent.click(eqTabBtn);
+    expect(screen.getByText("Curva de respuesta en frecuencia")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Graves +" })).toBeInTheDocument();
+
+    const settingsTabBtn = screen.getByRole("button", { name: "Ajustes" });
+    fireEvent.click(settingsTabBtn);
     expect(screen.getByText("No molestar")).toBeInTheDocument();
     expect(screen.getByText("Modo bajo consumo")).toBeInTheDocument();
 

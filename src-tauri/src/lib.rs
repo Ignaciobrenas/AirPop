@@ -117,6 +117,21 @@ pub fn position_popup_bottom_center(window: &WebviewWindow) {
     }
 }
 
+pub fn show_connected_notification(app: &AppHandle, name: &str, battery: &BatteryState) {
+    use tauri_plugin_notification::NotificationExt;
+    let body = match (battery.left, battery.right) {
+        (Some(l), Some(r)) => format!("{} conectado • Batería: L {}% | R {}%", name, l, r),
+        (Some(l), None) => format!("{} conectado • Batería: {}%", name, l),
+        _ => format!("{} conectado y listo para usar", name),
+    };
+    let _ = app
+        .notification()
+        .builder()
+        .title("AirPop • Conectado")
+        .body(body)
+        .show();
+}
+
 pub fn show_popup_overlay(app: &AppHandle) {
     if is_windows_fullscreen_busy() {
         return;
@@ -180,6 +195,15 @@ pub fn trigger_simulation(
             let _ = app.emit(EVENT_CASE_OPEN, payload);
         }
         SimulationScenario::Connected => {
+            show_connected_notification(
+                app,
+                &display_name,
+                &BatteryState {
+                    left: Some(82),
+                    right: Some(80),
+                    case: default_case,
+                },
+            );
             let payload = ConnectedEventPayload {
                 name: display_name,
                 model_id: model_id.to_string(),

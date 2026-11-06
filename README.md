@@ -4,13 +4,18 @@
 
 # AirPop
 
-**3D Bluetooth Proximity Popup, Universal Over-Ear & In-Ear Detection, Dynamic System Tray Battery Ring, and Listening-Mode Flyout built with Rust, Tauri 2, and React Three Fiber**
+**3D Bluetooth Proximity Popup, Universal Multi-Brand Support, 10-Band Graphic Equalizer with Equalizer APO Sync, Dynamic Windows Tray Battery Ring, and Native Toast Notifications built with Rust (Tauri 2) and React Three Fiber.**
 
 [![Release](https://img.shields.io/github/v/release/Ignaciobrenas/AirPop?style=flat-square&color=0a84ff)](https://github.com/Ignaciobrenas/AirPop/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/Ignaciobrenas/AirPop/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Ignaciobrenas/AirPop/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-30d158.svg?style=flat-square)](LICENSE)
-[![Stack](https://img.shields.io/badge/Stack-Rust%20%7C%20Tauri%202%20%7C%20R3F-38bdf8?style=flat-square)](#architecture)
-[![Telemetry](https://img.shields.io/badge/Telemetry-0%25%20Offline-10b981?style=flat-square)](#security--privacy)
+[![Stack](https://img.shields.io/badge/Stack-Rust%20%7C%20Tauri%202%20%7C%20R3F-38bdf8?style=flat-square)](#arquitectura)
+[![Languages](https://img.shields.io/badge/Languages-ES%20%7C%20EN%20%7C%20PT%20%7C%20FR%20%7C%20DE-a855f7?style=flat-square)](#sistema-de-traducciones-i18n)
+[![Telemetry](https://img.shields.io/badge/Telemetry-0%25%20Offline-10b981?style=flat-square)](#privacidad-y-rendimiento)
+
+<br />
+
+> **Nota del autor**: Este proyecto ha sido desarrollado principalmente por un alumno del ciclo formativo de **DAW (Desarrollo de Aplicaciones Web)** que quería dar el salto a la programación de escritorio nativa de alto rendimiento, combinando el poder y seguridad de **Rust (Tauri 2)** con un frontend moderno en **React, Three.js (React Three Fiber), Framer Motion y Tailwind CSS**.
 
 <br />
 
@@ -20,129 +25,288 @@
 
 ---
 
-## <img src="docs/assets/icons/sparkles.svg" width="22" height="22" align="absmiddle" alt="" /> Key Features
+## 📸 Capturas de la Aplicación
 
-- **Universal Over-Ear (Headband) & In-Ear Detection**: Automatically identifies whether connected or nearby headphones are **Over-Ear Headband (`over-ear`)** or **True Wireless In-Ear (`earbuds`)** across major manufacturers (**Sony WH-1000XM5 / XM4 / WF-1000XM5**, **Bose QuietComfort Ultra Headphones & Earbuds**, **Sennheiser Momentum 4**, **Samsung Galaxy Buds3 Pro**, **Studio Pro**, **Pro 3**, **Series 4 / 4 ANC**, and **Max 2**).
-- **Real-Time BLE Proximity Detection (`0x004C` / Multi-Vendor)**: Scans Bluetooth Low Energy advertisements, filters by signal strength (`RSSI > -60 dBm`), correlates devices via payload signature to handle rotating random MAC addresses (RPA), and enforces a 12-second per-device debounce.
-- **Three Sculpted 3D Rigs at 60 FPS**: Powered by **React Three Fiber (Three.js)** with damped harmonic spring physics (`stepSpring`), studio 3-point lighting, and subtle mouse parallax:
-  1. **Over-Ear Headband Rig (`over-ear-sculpted` & `over-ear-oval`)**: Padded headband arch, metallic telescopic sliders, swiveling earcups that unfold from travel pose to listening pose, and plush memory-foam ear cushions.
-  2. **Stem In-Ear Rig (`stem-earbuds`)**: Contoured charging case with recessed metallic hinge, spring-opening lid (`case_lid`), and staggered floating earbuds (`bud_left`, `bud_right`).
-  3. **Sculpted Stemless In-Ear Rig (`bud-in-ear`)**: Compact matte vault case with wide-opening lid and ergonomic acoustic buds featuring metallic touch-sensor caps.
-- **Native Windows 10/11 Taskbar Integration**:
-  - **Dynamic System Tray Icon**: Rendered in-memory via `tiny-skia` showing a color-coded battery ring for the lowest level among `L`, `R`, and `Case`.
-  - **Acrylic / Mica Flyout**: Anchored to the tray icon with a segmented listening-mode selector (*Noise Cancellation*, *Transparency*, *Adaptive*, *Off*) using custom `1.75px` stroke SVG icons (`ui/src/shared/icons.tsx`) and model/colorway switchers.
-  - **Anti-Spam Native Toasts**: Low-battery alerts (20% and 10%) and case fully charged notifications rate-limited to at most 1 toast per event and device every 30 minutes.
-- **Zero Idle CPU & GPU Footprint**: Code-split frontend bundles (`Flyout` is `1.74 kB` gzipped and never loads Three.js), automatic `frameloop="never"` suspension when hidden, explicit Three.js geometry/material disposal on unmount, and native `SHQueryUserNotificationState` fullscreen game suppression.
-
----
-
-## <img src="docs/assets/icons/layers.svg" width="22" height="22" align="absmiddle" alt="" /> Architecture
+### 1. Popup 3D de Proximidad y Conexión Automática
+Aparece suavemente sobre la barra de tareas al abrir la caja o conectar los auriculares, con renderizado 3D a 60 FPS, física de muelles y niveles de batería individuales:
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│ Rust Core (Tauri 2)                                      │
-│                                                           │
-│  ble::scanner ──► ble::apple_proximity (parser)           │
-│        │                     │                            │
-│  bt::watcher (connection)    ▼                            │
-│        │              device::registry (LRU/TTL catalog) │
-│        ▼                     │                            │
-│  state::machine ◄────────────┘                            │
-│        │                                                  │
-│        ├─► ipc (validated JSON) ──► popup window          │
-│        ├─► tray (tiny-skia icon) ──► flyout window        │
-│        ├─► toast (rate-limited notifications)             │
-│        └─► settings (store) / autostart / single-instance │
-│                                                           │
-│  aap: L2CAP protocol (with automatic degradation on Win)  │
-└──────────────────────────────────────────────────────────┘
-                         │ IPC events & commands
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│ UI (WebView2)                                             │
-│  popup:  React + R3F + Damped 3D Spring Rigs (lazy chunk) │
-│  flyout: React + Custom SVG Icon Library (1.74 kB gzip)   │
-│  stores (zustand), tokens.css, spring.ts, .glb assets     │
-└──────────────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────────────────────────────┐
+  │                        AirPop Overlay                        │
+  │                                                              │
+  │                ┌──────────────────────────┐                  │
+  │                │   In-Ear · True Wireless │                  │
+  │                └──────────────────────────┘                  │
+  │                                                              │
+  │                            ╭───╮                             │
+  │                           │ 3D  │  ◄── Render interactivo    │
+  │                            ╰───╯       con iluminación PBR   │
+  │                                        y física de resortes  │
+  │                                                              │
+  │                       Sony WF-1000XM5                        │
+  │                                                              │
+  │          ╭────╮               ╭────╮               ╭────╮    │
+  │         │ 82% │              │ 80% │              │ 64% │    │
+  │          ╰────╯               ╰────╯               ╰────╯    │
+  │         Izquierdo             Derecho              Estuche   │
+  │                                                              │
+  │                     ┌─────────────────┐                      │
+  │                     │    Conectar     │                      │
+  │                     └─────────────────┘                      │
+  └──────────────────────────────────────────────────────────────┘
+```
+
+### 2. Ecualizador Gráfico de 10 Bandas con Curva de Frecuencia y Sincronización APO
+Curva visual en tiempo real, 16 presets ajustados al estándar ISO, protección anti-clipping y sincronización directa con el driver Equalizer APO de Windows:
+
+```text
+  ┌──────────────────────────────────────────────────────────────┐
+  │                     Ecualizador Gráfico                      │
+  │  Activo · Preamplificador: -4.0 dB       [Plano] [ ON / OFF] │
+  ├──────────────────────────────────────────────────────────────┤
+  │  ▲ +12 dB        ╭───────╮                                   │
+  │  │              ╱         ╲        ╭──────╮                  │
+  │  │  0 dB ──────╱───────────╲──────╱────────╲─────── 0 dB     │
+  │  │                               ╱                           │
+  │  ▼ -12 dB                       ╱                            │
+  ├──────────────────────────────────────────────────────────────┤
+  │   +6    +4    +2    -1    -2    -1    +2    +4    +5    +5   │
+  │   │█│   │█│   │ │   │ │   │ │   │ │   │ │   │█│   │█│   │█│  │
+  │   │█│   │█│   │█│   │ │   │ │   │ │   │█│   │█│   │█│   │█│  │
+  │   │█│   │█│   │█│   │█│   │█│   │█│   │█│   │█│   │█│   │█│  │
+  │   31    62    125   250   500   1k    2k    4k    8k    16k  │
+  ├──────────────────────────────────────────────────────────────┤
+  │  Estilos: [Plano] [Graves +] [Agudos +] [Rock] [Pop] [Gaming]│
+  │  ● Sincronizado con Equalizer APO             [Sincronizar]  │
+  └──────────────────────────────────────────────────────────────┘
+```
+
+### 3. Flyout de Barra de Tareas con 3 Pestañas y Notificaciones Nativas
+Integrado en la bandeja del sistema de Windows con icono de batería dinámico y menús Mica/Acrílico:
+
+```text
+  ┌──────────────────────────────────────────────────────────────┐
+  │  [ Dispositivo ]       [ Ecualizador ]         [ Ajustes ]   │
+  ├──────────────────────────────────────────────────────────────┤
+  │  🎧 Sony WH-1000XM5                   [ ⇄ Cambiar a In-Ear ] │
+  │     Diadema · Over-Ear · Conectado                           │
+  │                                                              │
+  │                    ╭──────────────────╮                      │
+  │                   │    Diadema 90%   │                       │
+  │                    ╰──────────────────╯                      │
+  │                                                              │
+  │  Modo de escucha:                                            │
+  │  ┌──────────────┬──────────────┬──────────────┬───────────┐  │
+  │  │ Cancelación  │   Ambiente   │  Adaptativo  │ Desactiv. │  │
+  │  └──────────────┴──────────────┴──────────────┴───────────┘  │
+  └──────────────────────────────────────────────────────────────┘
+  
+  ┌──────────────────────────────────────────────────────────────┐
+  │ 🔔 Windows Notification                                   ✕  │
+  │ AirPop • Conectado                                           │
+  │ Sony WH-1000XM5 conectado • Batería: L 90% | R 90%           │
+  └──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## <img src="docs/assets/icons/headphones.svg" width="22" height="22" align="absmiddle" alt="" /> Model Catalog (`catalog/models.json`)
+## ✨ Características Principales
 
-All 18 supported models, silhouettes, and colorways are defined declaratively in [`catalog/models.json`](catalog/models.json):
-
-| Catalog ID | Display Name | Brand / Family | Form Factor | 3D Silhouette | Colorways |
-|---|---|---|---|---|---|
-| `sony-wh-1000xm5` | **Sony WH-1000XM5** | Sony | Over-Ear (Headband) | `over-ear-sculpted` | Black, Platinum Silver, Midnight Blue, Smoky Pink |
-| `sony-wh-1000xm4` | **Sony WH-1000XM4** | Sony | Over-Ear (Headband) | `over-ear-sculpted` | Black, Silver |
-| `sony-wf-1000xm5` | **Sony WF-1000XM5** | Sony | In-Ear | `bud-in-ear` | Black, Platinum Silver |
-| `bose-qc-ultra-headphones` | **Bose QC Ultra** | Bose | Over-Ear (Headband) | `over-ear-sculpted` | Black, White Smoke, Sandstone, Lunar Blue |
-| `bose-qc-ultra-earbuds` | **Bose QC Ultra Buds** | Bose | In-Ear | `bud-in-ear` | Black, White Smoke |
-| `sennheiser-momentum-4` | **Sennheiser Momentum 4** | Sennheiser | Over-Ear (Headband) | `over-ear-sculpted` | Graphite, White, Copper |
-| `beats-studio-pro` | **Studio Pro** | Studio | Over-Ear (Headband) | `over-ear-oval` | Matte Black, Sandstone, Navy, Deep Brown |
-| `galaxy-buds3-pro` | **Galaxy Buds3 Pro** | Samsung | In-Ear | `stem-earbuds` | Metallic Silver, White |
-| `airpods-pro-3` | **Pro 3** | GenericPro | In-Ear | `stem-earbuds` | White |
-| `airpods-4` | **Series 4** | GenericPro | In-Ear | `stem-earbuds` | White |
-| `airpods-4-anc` | **Series 4 ANC** | GenericPro | In-Ear | `stem-earbuds` | White |
-| `airpods-max-2` | **Max 2** | GenericPro | Over-Ear (Headband) | `over-ear-oval` | Midnight, Starlight, Orange, Purple, Blue |
-| `airpods-pro-2` | **Pro 2** | GenericPro | In-Ear | `stem-earbuds` | White |
-| `airpods-pro-1` | **Pro 1** | GenericPro | In-Ear | `stem-earbuds` | White |
-| `airpods-3` | **Series 3** | GenericPro | In-Ear | `stem-earbuds` | White |
-| `airpods-2` | **Series 2** | GenericPro | In-Ear | `stem-earbuds` | White |
-| `airpods-1` | **Series 1** | GenericPro | In-Ear | `stem-earbuds` | White |
-| `airpods-max` | **Max** | GenericPro | Over-Ear (Headband) | `over-ear-oval` | Space Gray, Silver, Sky Blue |
+- **Compatibilidad Universal Multi-Marca (53+ Modelos + Genéricos)**:
+  - **Sony**: WH-1000XM5, WH-1000XM4, WH-1000XM3, WF-1000XM5, WF-1000XM4, LinkBuds S.
+  - **Bose**: QuietComfort Ultra Headphones, QuietComfort Ultra Earbuds, QuietComfort 45, QuietComfort 35 II, Noise Cancelling Headphones 700.
+  - **Beats**: Studio Pro, Studio3 Wireless, Solo 4, Solo3, Fit Pro, Powerbeats Pro, Beats Flex.
+  - **Sennheiser**: Momentum 4 Wireless, Momentum 3 Wireless, Accentum Plus, HD 450BT.
+  - **JBL**: Tour One M2, Live 660NC, Tune 770NC.
+  - **Nothing**: Ear (2), Ear (a), Headphone (1).
+  - **Familia Pro / Max**: Pro 1/2/3, Series 1/2/3/4/4 ANC, Max 1/2.
+  - **Genéricos Universales**: Detección inteligente de cualquier auricular Bluetooth o diadema mediante análisis de nombres (`Name Token Classifier`) y Clase de Dispositivo Bluetooth (`Class of Device 0x200404`).
+- **Selector Dinámico de Factor de Forma**:
+  - ¿Tus auriculares son detectados como In-Ear pero son de diadema (o viceversa)? Con un solo clic en el botón `[⇄ Over-Ear / In-Ear]` del Flyout puedes alternar el factor de forma al instante.
+- **Ecualizador Gráfico Paramétrico de 10 Bandas**:
+  - Bandas estándar ISO: **31 Hz, 62 Hz, 125 Hz, 250 Hz, 500 Hz, 1 kHz, 2 kHz, 4 kHz, 8 kHz, 16 kHz**.
+  - Ganancia continua de **-12 dB a +12 dB** con filtros biquad peaking (Q = 1.41).
+  - Cálculo automático de **preamplificador anti-clipping** (`headroom` de seguridad).
+  - **16 Presets Afinados**: *Plano, Graves+, Graves−, Agudos+, Voces, Podcast, Rock, Pop, Hip-hop, Electrónica, Jazz, Clásica, Acústica, Loudness, Gaming y Nocturno*.
+  - **Integración con Equalizer APO**: Detección del directorio de instalación en Windows y exportación directa de directivas limpias a `config.txt` con aislamiento seguro de inyecciones.
+- **Sistema de Traducciones Completo (5 Idiomas)**:
+  - 🇪🇸 **Español** (ES)
+  - 🇬🇧 **English** (EN)
+  - 🇵🇹 **Português** (PT)
+  - 🇫🇷 **Français** (FR)
+  - 🇩🇪 **Deutsch** (DE)
+  - Detección automática del idioma del sistema operativo y selector manual en la pestaña de Ajustes con persistencia.
+- **Presencia Discreta en la Barra de Tareas de Windows**:
+  - **Icono Dinámico en la Bandeja**: Dibujado en memoria píxel a píxel con `tiny-skia`, mostrando un anillo de batería con color semántico (verde >30%, amarillo 15-30%, rojo <15%).
+  - **Notificaciones Nativas al Conectar**: Al vincularse o encender los auriculares, Windows muestra una notificación nativa con el nombre y nivel de carga.
+  - **Toasts Anti-Spam Inteligentes**: Alertas de batería baja (20% y 10%) con limitador de spam de máximo 1 notificación cada 30 minutos por dispositivo.
+- **Diseño Ultra Moderno con Estilo Apple y Bordes Redondeados**:
+  - Tokens de diseño unificados: `--radius-card: 28px`, `--radius-control: 14px`, `--radius-pill: 999px`.
+  - Animaciones 100% basadas en física de muelles (`spring.ts`), respetando `prefers-reduced-motion`.
+  - Materiales Mica y Acrílico nativos de Windows 11 vía `window-vibrancy`.
+- **Rendimiento y Privacidad Absoluta**:
+  - 0% CPU y GPU cuando las ventanas están ocultas (`frameloop="never"`).
+  - Supresión automática del popup cuando hay videojuegos o aplicaciones a pantalla completa (`SHQueryUserNotificationState`).
+  - Sin telemetría, sin rastreadores y sin conexión a internet. Funciona 100% offline.
 
 ---
 
-## <img src="docs/assets/icons/terminal.svg" width="22" height="22" align="absmiddle" alt="" /> Quick Start & CLI Usage
+## 🏗️ Arquitectura
 
-### Download Prebuilt Windows `.exe`
-Download the standalone `airpop.exe` (or `airpop-windows-x64.exe` and `airpop-capture-windows-x64.exe`) directly from the latest [GitHub Release](https://github.com/Ignaciobrenas/AirPop/releases).
+```text
+┌───────────────────────────────────────────────────────────┐
+│ Rust Core (Tauri 2)                                       │
+│                                                           │
+│  ble::scanner ──► ble::apple_proximity                    │
+│        │                                                  │
+│  bt::windows (DeviceWatcher) ──► device::classify         │
+│        │                                │                 │
+│        ▼                                ▼                 │
+│  state::machine ◄────────────── device::registry          │
+│        │                                                  │
+│        ├─► ipc (contrato sincronizado) ──► popup window   │
+│        ├─► tray (icono tiny-skia)       ──► flyout window  │
+│        ├─► toast (notificaciones Windows)                 │
+│        ├─► eq::apo (generador Equalizer APO)              │
+│        └─► settings (preferencias y arranque)             │
+└───────────────────────────────────────────────────────────┘
+                         │ IPC Commands & Events
+                         ▼
+┌───────────────────────────────────────────────────────────┐
+│ Frontend UI (WebView2)                                    │
+│  popup:   React + R3F + 3 Rigs 3D + Física de resortes    │
+│  flyout:  Segmented Tabs + Equalizer 10-Band + Settings   │
+│  i18n:    Traducciones (ES, EN, PT, FR, DE)               │
+│  store:   Zustand Store reactivo con persistencia local   │
+└───────────────────────────────────────────────────────────┘
+```
 
-### Frontend Development & Testing
-```bash
+---
+
+## 🌍 Sistema de Traducciones (i18n)
+
+El sistema de internacionalización implementado en [`ui/src/shared/i18n.ts`](ui/src/shared/i18n.ts) cubre la totalidad de la interfaz:
+
+| Idioma | Código | Pestañas | Modos de Escucha | Ecualizador | Ajustes |
+|---|---|---|---|---|---|
+| **Español** | `es` | Dispositivo, Ecualizador, Ajustes | Cancelación, Ambiente, Adaptativo, Off | 10 bandas, 16 presets, APO | No molestar, Bajo consumo, Autostart |
+| **English** | `en` | Device, Equalizer, Settings | Noise Cancellation, Transparency, Adaptive, Off | 10 bands, 16 presets, APO | Do Not Disturb, Low Power, Autostart |
+| **Português** | `pt` | Dispositivo, Equalizador, Ajustes | Cancelamento de Ruído, Ambiente, Adaptativo, Off | 10 bandas, 16 predefinições, APO | Não perturbe, Economia de energia |
+| **Français** | `fr` | Appareil, Égaliseur, Paramètres | Réduction de bruit, Transparence, Adaptatif, Off | 10 bandes, 16 préréglages, APO | Ne pas déranger, Économie d'énergie |
+| **Deutsch** | `de` | Gerät, Equalizer, Einstellungen | Geräuschunterdrückung, Transparenz, Adaptiv, Aus | 10 Bänder, 16 Voreinstellungen, APO | Nicht stören, Energiesparmodus |
+
+---
+
+## 🎛️ Ecualizador y Presets Disponibles
+
+El ecualizador paramétrico incluye 16 perfiles calibrados:
+
+| Preset | Graves (31-125 Hz) | Medios (250-2000 Hz) | Agudos (4k-16k Hz) | Descripción |
+|---|---|---|---|---|
+| **Plano** | `0, 0, 0 dB` | `0, 0, 0, 0 dB` | `0, 0, 0 dB` | Respuesta lineal y transparente |
+| **Graves +** | `+6, +5, +4 dB` | `+2, 0, 0, 0 dB` | `0, 0, 0 dB` | Refuerzo de subgraves y pegada |
+| **Graves −** | `-6, -5, -3 dB` | `-1, 0, 0, 0 dB` | `0, 0, 0 dB` | Atenuación de frecuencias retumbantes |
+| **Agudos +** | `0, 0, 0 dB` | `0, 0, +1, +2 dB` | `+4, +5, +6 dB` | Brillo, aire y definición en instrumentos |
+| **Voces** | `-2, -2, -1 dB` | `+1, +3, +4, +4 dB` | `+2, 0, -1 dB` | Claridad óptima para voz humana |
+| **Podcast** | `-4, -3, -1 dB` | `+2, +4, +4, +3 dB` | `+1, -1, -3 dB` | Filtro de corte bajo y realce vocal |
+| **Rock** | `+5, +4, +2 dB` | `-1, -2, -1, +2 dB` | `+4, +5, +5 dB` | Curva en V para guitarras y batería |
+| **Pop** | `-1, +1, +3 dB` | `+4, +3, 0, -1 dB` | `-1, +1, +2 dB` | Ritmo balanceado y voces al frente |
+| **Hip-hop** | `+5, +4, +2 dB` | `+3, -1, -1, +1 dB` | `-1, +2, +3 dB` | Subgraves contundentes y agudos nítidos |
+| **Electrónica** | `+5, +4, +1 dB` | `0, -2, +2, +1 dB` | `+2, +4, +5 dB` | Pegada rápida y brillo sintético |
+| **Jazz** | `+3, +2, +1 dB` | `+2, -2, -2, 0 dB` | `+1, +2, +3 dB` | Calidez en contrabajo y metales suaves |
+| **Clásica** | `+4, +3, +2 dB` | `+2, -1, -1, 0 dB` | `+2, +3, +4 dB` | Rango dinámico amplio para orquesta |
+| **Acústica** | `+4, +3, +2 dB` | `+1, +2, +2, +3 dB` | `+3, +3, +2 dB` | Realce para cuerdas y percusión ligera |
+| **Loudness** | `+6, +4, +1 dB` | `0, -1, 0, -1 dB` | `+1, +4, +5 dB` | Compensación para bajo volumen |
+| **Gaming** | `-2, -1, 0 dB` | `0, 0, +2, +4 dB` | `+5, +3, +1 dB` | Enfoque en pasos y pistas de audio espacial |
+| **Nocturno** | `-3, -2, 0 dB` | `+2, +3, +3, +2 dB` | `+1, 0, -2 dB` | Graves suaves para no cansar el oído |
+
+---
+
+## 🚀 Compilación y Desarrollo
+
+### Requisitos
+- **Node.js** v18+ y `npm`
+- **Rust** 1.80+ (`stable-x86_64-pc-windows-gnu` o `msvc`)
+- **Tauri CLI 2**
+
+### Pasos de compilación
+
+```powershell
+# 1. Clonar el repositorio
+git clone https://github.com/Ignaciobrenas/AirPop.git
+cd AirPop
+
+# 2. Instalar dependencias del frontend
 cd ui
 npm install
-npm run lint
-npm test
+
+# 3. Compilar el frontend a producción
 npm run build
+
+# 4. Compilar el ejecutable nativo de Rust
+cd ../src-tauri
+cargo build --release --bin airpop
 ```
 
-### Simulation Mode (`--simulate`)
-Iterate on UI choreography or test any over-ear headband or in-ear model without physical hardware:
-```bash
-# Syntax: airpop --simulate <model> <color> <scenario>
-airpop.exe --simulate sony-wh-1000xm5 black case-open
-airpop.exe --simulate bose-qc-ultra-headphones sandstone connected
-airpop.exe --simulate sennheiser-momentum-4 copper case-open
-airpop.exe --simulate airpods-max-2 orange connected
-airpop.exe --simulate airpods-pro-3 white charging
+El ejecutable compilado se encontrará en:
+`target/x86_64-pc-windows-gnu/release/airpop.exe`
+
+### Ejecución de Tests y Verificación de Calidad
+
+```powershell
+# Tests unitarios del backend Rust (39 tests de Bluetooth, BLE, EQ y Estado)
+cargo test
+
+# Linter sin advertencias
+cargo clippy --all-targets -- -D warnings
+
+# Verificación de formato de código
+cargo fmt --check
+
+# Tests unitarios del frontend React / Vitest (8 suites completas)
+cd ui
+npm test
+
+# Verificación de tipos TypeScript
+npm run lint
 ```
 
 ---
 
-## <img src="docs/assets/icons/gauge.svg" width="22" height="22" align="absmiddle" alt="" /> Performance & Resource Budget
+## 🎮 Comandos de Simulación (CLI)
 
-| Metric | Target Budget | Implementation Strategy |
-|---|---|---|
-| **Idle CPU Usage** | `~0%` | 3D `<Canvas>` unmounts when hidden and sets `frameloop="never"` on background visibility |
-| **Popup First Frame** | `< 150 ms` | Pre-initialized hidden overlay windows + vendor code-splitting |
-| **Animation Frame Rate** | `60 fps` | Damped harmonic springs (`stepSpring` & `spring.ts`), `dpr={[1, 1.5]}`, and `powerPreference: "low-power"` |
-| **Memory Overhead** | `< 100 MB` | Explicit GPU geometry/material disposal + bounded LRU/TTL device registry (`MAX_TRACKED_DEVICES = 32`) |
-| **Accessibility** | `WCAG 2.1 AA` | `aria-live="polite"`, `Escape` key dismissal, and `prefers-reduced-motion` support |
+Puedes probar cualquier modelo y escenario sin necesidad de conectar hardware físico:
+
+```powershell
+# Probar popup de Sony WH-1000XM5
+.\airpop.exe --simulate sony-wh-1000xm5 black case-open
+
+# Probar conexión con notificación de Bose QC Ultra
+.\airpop.exe --simulate bose-qc-ultra-headphones white connected
+
+# Probar aviso de batería baja
+.\airpop.exe --simulate sennheiser-momentum-4 graphite low-battery
+
+# Probar auriculares genéricos
+.\airpop.exe --simulate generic-headphones black connected
+```
 
 ---
 
-## <img src="docs/assets/icons/shield.svg" width="22" height="22" align="absmiddle" alt="" /> Security & Privacy
+## 🛡️ Privacidad y Seguridad
 
-- **Zero Telemetry & Offline-Only**: AirPop makes zero external network requests and collects no analytics or telemetry.
-- **Strict Content Security Policy (CSP) & Tauri Capabilities**: Enforces a locked-down CSP (`default-src 'self'; connect-src ipc: http://ipc.localhost`) and least-privilege Tauri v2 capabilities (`src-tauri/capabilities/default.json`).
-- **Allowlist IPC Validation**: Every IPC command validates `modelId`, `color`, and settings fields against the catalog allowlist and strict length bounds. See [`SECURITY.md`](SECURITY.md) for the full threat model.
-- **100% Original Assets**: All 3D `.glb` meshes, `.webp` renders, custom `1.75px` stroke SVG icons (`ui/src/shared/icons.tsx`), and synthesized Web Audio chimes are original creations. No proprietary third-party models, renders, SF Symbols, audio files, or trademarks are used.
+- **100% Fuera de Línea**: La aplicación no realiza peticiones HTTP/HTTPS externas ni envía telemetría.
+- **Sin Inyección de DLLs**: Toda la comunicación con el subsistema de audio se realiza mediante directivas estándar declarativas de Equalizer APO.
+- **Limpieza de Recursos GPU**: Los búferes y texturas de WebGL se destruyen explícitamente al cerrar ventanas para evitar fugas de VRAM.
 
 ---
 
-## <img src="docs/assets/icons/scale.svg" width="22" height="22" align="absmiddle" alt="" /> License
+## 📄 Licencia
 
-Distributed under the [MIT License](LICENSE).
+Este proyecto está bajo la licencia **MIT**. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+---
+
+<div align="center">
+  <sub>Desarrollado con dedicación y pasión por el desarrollo de software nativo y web.</sub>
+</div>

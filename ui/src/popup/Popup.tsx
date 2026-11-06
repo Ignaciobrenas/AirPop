@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { getTranslation } from "../shared/i18n";
 import { EarbudsGlyphIcon, HeadbandGlyphIcon } from "../shared/icons";
 import { resolveTransition } from "../shared/spring";
 import {
@@ -22,6 +23,7 @@ export const Popup: React.FC = () => {
     charging,
     listeningMode,
     isHovered,
+    language,
     setHovered,
     dismissPopup,
     applyConnected,
@@ -29,6 +31,7 @@ export const Popup: React.FC = () => {
 
   const prefersReducedMotion = Boolean(useReducedMotion());
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
+  const t = getTranslation(language);
 
   const model = findCatalogModel(models, modelId);
   const colorHex = resolveColorHex(model, colorId);
@@ -68,12 +71,12 @@ export const Popup: React.FC = () => {
 
   const listeningLabel =
     listeningMode === "noise-cancellation"
-      ? "ANC"
+      ? t.modes.noiseCancellation
       : listeningMode === "transparency"
-      ? "Transparencia"
+      ? t.modes.transparency
       : listeningMode === "adaptive"
-      ? "Adaptativo"
-      : "Desactivado";
+      ? t.modes.adaptive
+      : t.modes.off;
 
   return (
     <div
@@ -92,7 +95,7 @@ export const Popup: React.FC = () => {
           <motion.div
             key="popup-proximity"
             role="dialog"
-            aria-label={`Auriculares ${deviceName} cerca`}
+            aria-label={`${deviceName} ${t.status.caseOpen}`}
             className="airpop-popup-card"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => {
@@ -134,6 +137,7 @@ export const Popup: React.FC = () => {
                 fontSize: "11px",
                 fontWeight: 500,
                 color: "var(--text-secondary)",
+                borderRadius: "var(--radius-pill)",
               }}
             >
               {isOverEar ? (
@@ -142,7 +146,7 @@ export const Popup: React.FC = () => {
                 <EarbudsGlyphIcon size={14} />
               )}
               <span>
-                {isOverEar ? "Diadema · Over-Ear" : "In-Ear · True Wireless"}
+                {isOverEar ? t.formFactor.overEar : t.formFactor.inEar}
               </span>
             </div>
 
@@ -195,24 +199,24 @@ export const Popup: React.FC = () => {
               >
                 {isOverEar ? (
                   <BatteryRing
-                    label="Diadema"
+                    label={t.battery.headband}
                     percentage={battery.left ?? battery.right}
                     charging={charging.left || charging.right}
                   />
                 ) : (
                   <>
                     <BatteryRing
-                      label="L"
+                      label={t.battery.left}
                       percentage={battery.left}
                       charging={charging.left}
                     />
                     <BatteryRing
-                      label="R"
+                      label={t.battery.right}
                       percentage={battery.right}
                       charging={charging.right}
                     />
                     <BatteryRing
-                      label="Caja"
+                      label={t.battery.case}
                       percentage={battery.case}
                       charging={charging.case}
                     />
@@ -234,7 +238,7 @@ export const Popup: React.FC = () => {
                   })
                 }
               >
-                Conectar
+                {t.status.connected.startsWith("C") ? "Conectar" : "Connect"}
               </button>
             </motion.div>
           </motion.div>
@@ -244,7 +248,7 @@ export const Popup: React.FC = () => {
           <motion.div
             key="popup-connected"
             role="status"
-            aria-label={`${deviceName} conectado`}
+            aria-label={`${deviceName} ${t.status.connected}`}
             className="airpop-compact-pill"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -318,6 +322,7 @@ export const Popup: React.FC = () => {
                   fontSize: "12px",
                   fontWeight: 500,
                   color: "var(--text-secondary)",
+                  borderRadius: "var(--radius-pill)",
                 }}
               >
                 {listeningLabel}
@@ -334,12 +339,20 @@ export const Popup: React.FC = () => {
               }}
             >
               {isOverEar ? (
-                <span>Batería Diadema {battery.left ?? battery.right ?? "—"}%</span>
+                <span>
+                  {t.battery.headband} {battery.left ?? battery.right ?? "—"}%
+                </span>
               ) : (
                 <>
-                  <span>L {battery.left ?? "—"}%</span>
-                  <span>R {battery.right ?? "—"}%</span>
-                  <span>Caja {battery.case ?? "—"}%</span>
+                  <span>
+                    {t.battery.left} {battery.left ?? "—"}%
+                  </span>
+                  <span>
+                    {t.battery.right} {battery.right ?? "—"}%
+                  </span>
+                  <span>
+                    {t.battery.case} {battery.case ?? "—"}%
+                  </span>
                 </>
               )}
             </div>

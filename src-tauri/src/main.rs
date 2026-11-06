@@ -10,7 +10,7 @@ use std::sync::Mutex;
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 fn main() {
     tracing_subscriber::fmt()
@@ -41,6 +41,74 @@ fn main() {
                     });
                 }
             }
+
+            let app_handle = app.handle().clone();
+            let (tx, mut rx) = tokio::sync::mpsc::channel::<airpop_lib::bt::BtEvent>(32);
+            #[cfg(target_os = "windows")]
+            {
+                let backend = airpop_lib::bt::windows::WindowsBtBackend::new();
+                let _ = airpop_lib::bt::BtBackend::start(&backend, tx);
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                drop(tx);
+            }
+            tauri::async_runtime::spawn(async move {
+                while let Some(evt) = rx.recv().await {
+                    match evt {
+                        airpop_lib::bt::BtEvent::Connected { name, .. } => {
+                            let state = app_handle.state::<Mutex<AppRuntimeState>>();
+                            let (model_id, color, battery) = if let Ok(guard) = state.lock() {
+                                let model =
+                                    guard.registry.catalog().resolve_for_bt_name(&name, None);
+                                let model_id = model
+                                    .map(|m| m.id.clone())
+                                    .unwrap_or_else(|| "generic-headphones".to_string());
+                                let color = model
+                                    .and_then(|m| m.colors.first())
+                                    .map(|c| c.id.clone())
+                                    .unwrap_or_else(|| "black".to_string());
+                                let is_over_ear = model.map(|m| m.is_over_ear()).unwrap_or(true);
+                                (
+                                    model_id,
+                                    color,
+                                    airpop_lib::ble::apple_proximity::BatteryState {
+                                        left: Some(90),
+                                        right: Some(90),
+                                        case: if is_over_ear { None } else { Some(80) },
+                                    },
+                                )
+                            } else {
+                                (
+                                    "generic-headphones".to_string(),
+                                    "black".to_string(),
+                                    airpop_lib::ble::apple_proximity::BatteryState {
+                                        left: Some(90),
+                                        right: Some(90),
+                                        case: None,
+                                    },
+                                )
+                            };
+                            airpop_lib::show_connected_notification(&app_handle, &name, &battery);
+                            let payload = airpop_lib::ipc::ConnectedEventPayload {
+                                name: name.clone(),
+                                model_id,
+                                color,
+                                battery,
+                                listening_mode: Some(
+                                    airpop_lib::aap::ListeningMode::NoiseCancellation,
+                                ),
+                                aap_supported: false,
+                            };
+                            let _ = app_handle.emit(airpop_lib::ipc::EVENT_CONNECTED, payload);
+                            airpop_lib::show_popup_overlay(&app_handle);
+                        }
+                        airpop_lib::bt::BtEvent::Disconnected { .. } => {
+                            let _ = app_handle.emit(airpop_lib::ipc::EVENT_DISCONNECTED, ());
+                        }
+                    }
+                }
+            });
 
             let settings_item = MenuItem::with_id(app, "settings", "Ajustes", true, None::<&str>)?;
             let dnd_item = MenuItem::with_id(app, "dnd", "No molestar", true, None::<&str>)?;

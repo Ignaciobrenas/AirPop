@@ -1,14 +1,20 @@
 import { create } from "zustand";
 import catalogData from "../../../catalog/models.json";
+import eqPresetsJson from "../../../catalog/eq-presets.json";
+import { detectSystemLanguage, SupportedLanguage } from "./i18n";
 import {
+  ApoStatus,
   AppSettings,
   BatteryState,
   CaseOpenEventPayload,
   ChargingState,
   ConnectedEventPayload,
+  EqProfile,
+  FormFactor,
   IPC_COMMANDS,
   invokeCommand,
   ListeningMode,
+  PresetDefinition,
   SimulationScenario,
 } from "./ipc";
 
@@ -62,6 +68,11 @@ export interface AirPopState {
   isHovered: boolean;
   connected: boolean;
   settings: AppSettings;
+  language: SupportedLanguage;
+  activeTab: "device" | "equalizer" | "settings";
+  eqProfile: EqProfile;
+  eqPresets: PresetDefinition[];
+  apoStatus: ApoStatus;
   applyCaseOpen: (payload: CaseOpenEventPayload) => void;
   applyConnected: (payload: ConnectedEventPayload) => void;
   applyBattery: (battery: BatteryState, charging: ChargingState) => void;
@@ -75,9 +86,37 @@ export interface AirPopState {
     color: string,
     scenario: SimulationScenario
   ) => void;
+  setLanguage: (lang: SupportedLanguage) => void;
+  setActiveTab: (tab: "device" | "equalizer" | "settings") => void;
+  setEqGain: (index: number, gain: number) => void;
+  applyEqPreset: (presetId: string) => void;
+  toggleEq: () => void;
+  resetEq: () => void;
+  syncApo: () => Promise<void>;
+  checkApoStatus: () => Promise<void>;
+  setFormFactor: (form: FormFactor) => void;
 }
 
 const defaultCatalog = (catalogData as { models: CatalogModel[] }).models;
+const defaultPresets = (eqPresetsJson as { presets: PresetDefinition[] })
+  .presets;
+
+const initialLanguage = (): SupportedLanguage => {
+  if (typeof window !== "undefined" && window.localStorage) {
+    const saved = window.localStorage.getItem("airpop_lang");
+    if (
+      saved &&
+      (saved === "es" ||
+        saved === "en" ||
+        saved === "pt" ||
+        saved === "fr" ||
+        saved === "de")
+    ) {
+      return saved as SupportedLanguage;
+    }
+  }
+  return detectSystemLanguage();
+};
 
 export function findCatalogModel(
   models: CatalogModel[],
@@ -122,6 +161,19 @@ export const useAirPopStore = create<AirPopState>((set, get) => ({
     soundEnabled: true,
     popupEnabled: true,
     preferredMonitor: null,
+  },
+  language: initialLanguage(),
+  activeTab: "device",
+  eqProfile: {
+    enabled: false,
+    presetId: "flat",
+    gainsDb: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  },
+  eqPresets: defaultPresets,
+  apoStatus: {
+    installed: false,
+    linked: false,
+    configDir: null,
   },
 
   applyCaseOpen: (payload) => {
@@ -243,5 +295,99 @@ export const useAirPopStore = create<AirPopState>((set, get) => ({
       });
     }
     void invokeCommand(IPC_COMMANDS.SIMULATE, { modelId, color, scenario });
+  },
+
+  setLanguage: (lang) => {
+    set({ language: lang });
+    if (typeof window !== "undefined" && window.localStorage) {
+      window.localStorage.setItem("airpop_lang", lang);
+    }
+  },
+
+  setActiveTab: (tab) => {
+    set({ activeTab: tab });
+  },
+
+  setEqGain: (index, gain) => {
+    const current = get().eqProfile;
+    const clamped = Math.max(-12, Math.min(12, Math.round(gain * 2) / 2));
+    const nextGains = [...current.gainsDb];
+    nextGains[index] = clamped;
+    const nextProfile: EqProfile = {
+      ...current,
+      enabled: true,
+      presetId: "custom",
+      gainsDb: nextGains,
+    };
+    set({ eqProfile: nextProfile });
+    void invokeCommand(IPC_COMMANDS.SET_EQ_PROFILE, { profile: nextProfile });
+  },
+
+  applyEqPreset: (presetId) => {
+    const preset = get().eqPresets.find((p) => p.id === presetId);
+    if (!preset) return;
+    const nextProfile: EqProfile = {
+      enabled: true,
+      presetId: preset.id,
+      gainsDb: [...preset.gains],
+    };
+    set({ eqProfile: nextProfile });
+    void invokeCommand(IPC_COMMANDS.SET_EQ_PROFILE, { profile: nextProfile });
+  },
+
+  toggleEq: () => {
+    const current = get().eqProfile;
+    const nextProfile: EqProfile = {
+      ...current,
+      enabled: !current.enabled,
+    };
+    set({ eqProfile: nextProfile });
+    void invokeCommand(IPC_COMMANDS.SET_EQ_PROFILE, { profile: nextProfile });
+  },
+
+  resetEq: () => {
+    const nextProfile: EqProfile = {
+      enabled: false,
+      presetId: "flat",
+      gainsDb: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    };
+    set({ eqProfile: nextProfile });
+    void invokeCommand(IPC_COMMANDS.SET_EQ_PROFILE, { profile: nextProfile });
+  },
+
+  syncApo: async () => {
+    try {
+      const res = await invokeCommand<ApoStatus>(IPC_COMMANDS.SYNC_APO_CONFIG);
+      if (res) {
+        set({ apoStatus: res });
+      }
+    } catch {
+      // ignore
+    }
+  },
+
+  checkApoStatus: async () => {
+    try {
+      const res = await invokeCommand<ApoStatus>(IPC_COMMANDS.GET_APO_STATUS);
+      if (res) {
+        set({ apoStatus: res });
+      }
+    } catch {
+      // ignore
+    }
+  },
+
+  setFormFactor: (form) => {
+    const name = get().deviceName;
+    void invokeCommand(IPC_COMMANDS.SET_FORM_FACTOR, {
+      deviceName: name,
+      formFactor: form,
+    });
+    const genericId =
+      form === "over-ear" ? "generic-headphones" : "generic-earbuds";
+    const found = get().models.find((m) => m.id === genericId);
+    if (found) {
+      set({ modelId: found.id });
+    }
   },
 }));
