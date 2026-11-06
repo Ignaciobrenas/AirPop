@@ -48,3 +48,4 @@ windows = { version = "0.58", features = [
 
 [target.'cfg(target_os = "linux")'.dependencies]
 bluer = { version = "0.17", features = ["bluetoothd", "l2cap"] }
+futures-util = "0.3"
