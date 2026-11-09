@@ -1,6 +1,6 @@
 [package]
 name = "airpop"
-version = "1.1.0"
+version = "1.2.0"
 description = "3D proximity popup, dynamic battery tray icon, and listening-mode flyout for wireless earbuds"
 authors = ["Ignacio Breñas"]
 license = "MIT"
@@ -9,6 +9,11 @@ edition = "2021"
 [lib]
 name = "airpop_lib"
 crate-type = ["rlib"]
+
+[[bin]]
+name = "airpop"
+path = "src/main.rs"
+test = false
 
 [build-dependencies]
 tauri-build = { version = "2.0.0", features = [] }

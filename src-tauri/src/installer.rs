@@ -30,7 +30,10 @@ pub const TERMS_TEXT: &str = include_str!("../resources/TERMS.txt");
 pub fn handle_cli_installer_modes() -> bool {
     let args: Vec<String> = env::args().collect();
 
-    if args.iter().any(|a| a == "--terms" || a == "--license" || a == "-l") {
+    if args
+        .iter()
+        .any(|a| a == "--terms" || a == "--license" || a == "-l")
+    {
         println!("{}", TERMS_TEXT);
         return true;
     }
@@ -75,7 +78,10 @@ pub fn handle_cli_installer_modes() -> bool {
 pub fn handle_cli_installer_modes() -> bool {
     let args: Vec<String> = env::args().collect();
 
-    if args.iter().any(|a| a == "--terms" || a == "--license" || a == "-l") {
+    if args
+        .iter()
+        .any(|a| a == "--terms" || a == "--license" || a == "-l")
+    {
         println!("{}", TERMS_TEXT);
         return true;
     }
@@ -152,12 +158,7 @@ fn ask_yes_no(title: &str, text: &str) -> bool {
     let title_h = HSTRING::from(title);
     let text_h = HSTRING::from(text);
     unsafe {
-        let res = MessageBoxW(
-            None,
-            &text_h,
-            &title_h,
-            MB_YESNO | MB_ICONQUESTION,
-        );
+        let res = MessageBoxW(None, &text_h, &title_h, MB_YESNO | MB_ICONQUESTION);
         res == IDYES
     }
 }
@@ -325,7 +326,11 @@ fn run_installer(current_exe: &Path, is_silent: bool, accept_terms: bool) -> Res
 }
 
 #[cfg(target_os = "linux")]
-fn run_linux_installer(current_exe: &Path, is_silent: bool, accept_terms: bool) -> Result<(), String> {
+fn run_linux_installer(
+    current_exe: &Path,
+    is_silent: bool,
+    accept_terms: bool,
+) -> Result<(), String> {
     if !is_silent && !accept_terms {
         println!("AirPop v{} - Términos y Condiciones", APP_VERSION);
         println!("Al instalar acepta la licencia MIT y privacidad 100% local (sin telemetría).");
