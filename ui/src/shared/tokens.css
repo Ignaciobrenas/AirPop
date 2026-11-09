@@ -1,20 +1,20 @@
 :root {
   --radius-card: 28px;
   --radius-pill: 999px;
-  --radius-control: 14px;
+  --radius-control: 16px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
   --space-6: 32px;
-  --font-sans: "Inter", "Segoe UI Variable", system-ui, sans-serif;
+  --font-sans: "Inter", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --text-primary: rgba(0, 0, 0, 0.88);
   --text-secondary: rgba(0, 0, 0, 0.56);
-  --surface: rgba(255, 255, 255, 0.72);
+  --surface: rgba(255, 255, 255, 0.78);
   --surface-border: rgba(255, 255, 255, 0.6);
-  --surface-elevated: rgba(255, 255, 255, 0.48);
-  --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.06), 0 24px 60px rgba(0, 0, 0, 0.22);
+  --surface-elevated: rgba(255, 255, 255, 0.52);
+  --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.04), 0 20px 48px rgba(0, 0, 0, 0.16);
   --ok: #30d158;
   --warn: #ffd60a;
   --danger: #ff453a;
@@ -23,12 +23,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text-primary: rgba(255, 255, 255, 0.92);
-    --text-secondary: rgba(255, 255, 255, 0.6);
-    --surface: rgba(30, 30, 32, 0.66);
-    --surface-border: rgba(255, 255, 255, 0.14);
+    --text-primary: rgba(255, 255, 255, 0.94);
+    --text-secondary: rgba(255, 255, 255, 0.62);
+    --surface: rgba(26, 28, 34, 0.76);
+    --surface-border: rgba(255, 255, 255, 0.16);
     --surface-elevated: rgba(255, 255, 255, 0.08);
-    --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 24px 60px rgba(0, 0, 0, 0.55);
+    --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 24px 60px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -53,9 +53,11 @@ body,
 
 .airpop-popup-card {
   border-radius: var(--radius-card);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   background: linear-gradient(
       165deg,
-      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.16) 0%,
       rgba(255, 255, 255, 0.02) 100%
     ),
     var(--surface);
@@ -67,9 +69,11 @@ body,
 
 .airpop-compact-pill {
   border-radius: var(--radius-pill);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   background: linear-gradient(
       165deg,
-      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.16) 0%,
       rgba(255, 255, 255, 0.02) 100%
     ),
     var(--surface);
@@ -80,7 +84,9 @@ body,
 }
 
 .airpop-flyout-card {
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   background: var(--surface);
   border: 1px solid var(--surface-border);
   box-shadow: var(--shadow-card);

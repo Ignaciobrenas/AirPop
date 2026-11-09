@@ -86,6 +86,11 @@ export interface TranslationDictionary {
     preferredMonitor: string;
     allMonitors: string;
     simulateTest: string;
+    about: string;
+    version: string;
+    privacyLocal: string;
+    privacyLocalDesc: string;
+    termsAccepted: string;
   };
 }
 
@@ -176,6 +181,11 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preferredMonitor: "Monitor preferido",
       allMonitors: "Principal predeterminado",
       simulateTest: "Probar animación popup",
+      about: "Acerca de AirPop",
+      version: "Versión 1.2.0",
+      privacyLocal: "100% Local y Privado",
+      privacyLocalDesc: "Sin telemetría, sin conexiones externas ni recolección de datos.",
+      termsAccepted: "Términos y Condiciones (EULA) activos",
     },
   },
 
@@ -265,6 +275,11 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preferredMonitor: "Preferred monitor",
       allMonitors: "Primary default",
       simulateTest: "Test popup animation",
+      about: "About AirPop",
+      version: "Version 1.2.0",
+      privacyLocal: "100% Local & Private",
+      privacyLocalDesc: "Zero telemetry, no outbound network requests, and zero data collection.",
+      termsAccepted: "Terms & Conditions (EULA) active",
     },
   },
 
@@ -354,6 +369,11 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preferredMonitor: "Monitor preferido",
       allMonitors: "Principal predefinido",
       simulateTest: "Testar animação popup",
+      about: "Sobre o AirPop",
+      version: "Versão 1.2.0",
+      privacyLocal: "100% Local e Privado",
+      privacyLocalDesc: "Sem telemetria, sem conexões de rede externas e sem recolha de dados.",
+      termsAccepted: "Termos e Condições (EULA) ativos",
     },
   },
 
@@ -443,6 +463,11 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preferredMonitor: "Écran favori",
       allMonitors: "Écran principal",
       simulateTest: "Tester l'animation",
+      about: "À propos d'AirPop",
+      version: "Version 1.2.0",
+      privacyLocal: "100% Local et Privé",
+      privacyLocalDesc: "Zéro télémétrie, aucune connexion externe et zéro collecte de données.",
+      termsAccepted: "Conditions générales (EULA) actives",
     },
   },
 
@@ -532,6 +557,11 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preferredMonitor: "Bevorzugter Monitor",
       allMonitors: "Standard-Hauptmonitor",
       simulateTest: "Popup-Animation testen",
+      about: "Über AirPop",
+      version: "Version 1.2.0",
+      privacyLocal: "100% Lokal & Sicher",
+      privacyLocalDesc: "Keine Telemetrie, keine externen Netzwerkverbindungen und keine Datensammlung.",
+      termsAccepted: "Nutzungsbedingungen (EULA) aktiv",
     },
   },
 };
