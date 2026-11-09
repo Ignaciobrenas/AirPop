@@ -392,8 +392,10 @@ fn run_uninstaller(is_silent: bool) -> Result<(), String> {
         }
     }
 
+    let current_pid = std::process::id();
+    let pid_filter = format!("PID ne {}", current_pid);
     let _ = Command::new("taskkill")
-        .args(["/F", "/IM", "airpop.exe"])
+        .args(["/F", "/FI", &pid_filter, "/IM", "airpop.exe"])
         .output();
 
     let _ = Command::new("reg")
@@ -430,7 +432,24 @@ fn run_uninstaller(is_silent: bool) -> Result<(), String> {
     }
 
     let target_dir = get_target_install_dir();
-    let _ = fs::remove_dir_all(&target_dir);
+    let target_dir_str = target_dir.to_string_lossy().to_string();
+
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+    let cleanup_cmd = format!(
+        "Start-Sleep -Milliseconds 600; Remove-Item -Recurse -Force '{}'",
+        target_dir_str
+    );
+    let _ = Command::new("powershell")
+        .args([
+            "-WindowStyle",
+            "Hidden",
+            "-NoProfile",
+            "-Command",
+            &cleanup_cmd,
+        ])
+        .creation_flags(CREATE_NO_WINDOW)
+        .spawn();
 
     if !is_silent {
         show_msg_box(
