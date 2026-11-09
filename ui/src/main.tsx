@@ -18,6 +18,9 @@ const LazyPopup = React.lazy(() =>
 const LazyFlyout = React.lazy(() =>
   import("./flyout/Flyout").then((m) => ({ default: m.Flyout }))
 );
+const LazySetup = React.lazy(() =>
+  import("./setup/SetupWizard").then((m) => ({ default: m.SetupWizard }))
+);
 
 export const AppRoot: React.FC = () => {
   const [hash, setHash] = useState<string>(() => window.location.hash || "#popup");
@@ -80,7 +83,13 @@ export const AppRoot: React.FC = () => {
 
   return (
     <Suspense fallback={null}>
-      {hash === "#flyout" ? <LazyFlyout /> : <LazyPopup />}
+      {hash === "#flyout" ? (
+        <LazyFlyout />
+      ) : hash === "#setup" ? (
+        <LazySetup />
+      ) : (
+        <LazyPopup />
+      )}
     </Suspense>
   );
 };

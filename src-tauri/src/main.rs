@@ -37,6 +37,20 @@ fn main() {
         .plugin(tauri_plugin_notification::init())
         .manage(Mutex::new(AppRuntimeState::new(is_simulated)))
         .setup(move |app| {
+            if airpop_lib::installer::is_setup_mode() {
+                if let Some(setup_win) = app.get_webview_window("setup") {
+                    #[cfg(target_os = "windows")]
+                    {
+                        let _ = window_vibrancy::apply_mica(&setup_win, Some(true)).or_else(|_| {
+                            window_vibrancy::apply_acrylic(&setup_win, Some((18, 18, 22, 180)))
+                        });
+                    }
+                    let _ = setup_win.show();
+                    let _ = setup_win.set_focus();
+                }
+                return Ok(());
+            }
+
             if let Some(flyout_win) = app.get_webview_window("flyout") {
                 #[cfg(target_os = "windows")]
                 {
@@ -252,7 +266,12 @@ fn main() {
             set_eq_profile,
             get_apo_status,
             sync_apo_config,
-            set_form_factor
+            set_form_factor,
+            install_app,
+            uninstall_app,
+            launch_installed_app,
+            get_eula_text,
+            open_test_popup
         ])
         .run(tauri::generate_context!())
         .expect("error while running AirPop tauri application");

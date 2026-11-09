@@ -39,6 +39,20 @@
         "skipTaskbar": true,
         "visible": false,
         "resizable": false
+      },
+      {
+        "label": "setup",
+        "title": "AirPop Setup",
+        "url": "index.html#setup",
+        "width": 540,
+        "height": 660,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "visible": false,
+        "center": true,
+        "resizable": false
       }
     ],
     "security": {

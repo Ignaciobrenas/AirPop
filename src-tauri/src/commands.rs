@@ -219,6 +219,49 @@ pub fn set_form_factor(
     Ok(())
 }
 
+#[tauri::command]
+pub fn install_app(
+    autostart: bool,
+    desktop_shortcut: bool,
+    start_menu_shortcut: bool,
+) -> Result<(), String> {
+    crate::installer::install_files_and_shortcuts(autostart, desktop_shortcut, start_menu_shortcut)
+}
+
+#[tauri::command]
+pub fn uninstall_app(app: AppHandle) -> Result<(), String> {
+    crate::installer::run_uninstaller(true)?;
+    app.exit(0);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn launch_installed_app(app: AppHandle) -> Result<(), String> {
+    crate::installer::launch_installed_app()?;
+    app.exit(0);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_eula_text() -> Result<String, String> {
+    Ok(crate::installer::TERMS_TEXT.to_string())
+}
+
+#[tauri::command]
+pub fn open_test_popup(
+    app: AppHandle,
+    state: State<'_, Mutex<AppRuntimeState>>,
+) -> Result<(), String> {
+    trigger_simulation(
+        &app,
+        &state,
+        "airpods-pro-3",
+        "white",
+        SimulationScenario::CaseOpen,
+    );
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -240,5 +283,12 @@ mod tests {
         assert!(validate_simulation_params("model", "color; rm -rf").is_err());
         assert!(validate_simulation_params("", "white").is_err());
         assert!(validate_simulation_params("model", "").is_err());
+    }
+
+    #[test]
+    fn test_eula_text_available() {
+        let eula = get_eula_text().unwrap();
+        assert!(!eula.is_empty());
+        assert!(eula.contains("AirPop"));
     }
 }

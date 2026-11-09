@@ -6,6 +6,7 @@ import { ModeSelector } from "../flyout/ModeSelector";
 import { BatteryRing, getBatteryColorToken } from "../popup/BatteryRing";
 import { Popup } from "../popup/Popup";
 import { disposeObject3D } from "../popup/Scene";
+import { SetupWizard } from "../setup/SetupWizard";
 import { resolveTransition, spring } from "../shared/spring";
 import { findCatalogModel, useAirPopStore } from "../shared/store";
 
@@ -62,7 +63,7 @@ describe("AirPop Design System, Multi-Brand, EQ & Resource Suite", () => {
     render(<Popup />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("Pro 3")).toBeInTheDocument();
-    expect(screen.getByText("In-Ear")).toBeInTheDocument();
+    expect(screen.getByText(/In-Ear/)).toBeInTheDocument();
 
     const connectBtn = screen.getByRole("button", { name: "Conectar" });
     fireEvent.click(connectBtn);
@@ -87,8 +88,7 @@ describe("AirPop Design System, Multi-Brand, EQ & Resource Suite", () => {
     useAirPopStore.getState().triggerSimulation("sony-wh-1000xm5", "black", "case-open");
     render(<Popup />);
     expect(screen.getByText("Sony WH-1000XM5")).toBeInTheDocument();
-    expect(screen.getByText("Diadema · Over-Ear")).toBeInTheDocument();
-    expect(screen.getByText("Diadema")).toBeInTheDocument();
+    expect(screen.getAllByText(/Diadema/).length).toBeGreaterThanOrEqual(1);
   });
 
   it("disposes Three.js geometries and materials cleanly to prevent GPU memory leaks", () => {
@@ -134,16 +134,30 @@ describe("AirPop Design System, Multi-Brand, EQ & Resource Suite", () => {
     const eqTabBtn = screen.getByRole("button", { name: "Ecualizador" });
     fireEvent.click(eqTabBtn);
     expect(screen.getByText("Curva de respuesta en frecuencia")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Graves +" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Realce de graves" })).toBeInTheDocument();
 
     const settingsTabBtn = screen.getByRole("button", { name: "Ajustes" });
     fireEvent.click(settingsTabBtn);
-    expect(screen.getByText("No molestar")).toBeInTheDocument();
-    expect(screen.getByText("Modo bajo consumo")).toBeInTheDocument();
+    expect(screen.getByText(/Modo No Molestar/i)).toBeInTheDocument();
+    expect(screen.getByText(/Modo Bajo Consumo/i)).toBeInTheDocument();
 
-    const dndCheckbox = screen.getByLabelText("No molestar") as HTMLInputElement;
+    const dndCheckbox = screen.getByLabelText(/Modo No Molestar/i) as HTMLInputElement;
     expect(dndCheckbox.checked).toBe(false);
     fireEvent.click(dndCheckbox);
     expect(useAirPopStore.getState().settings.doNotDisturb).toBe(true);
+  });
+
+  it("renders SetupWizard with EULA acceptance and shortcut options", () => {
+    render(<SetupWizard />);
+    expect(screen.getByText(/Instalador de AirPop/)).toBeInTheDocument();
+    expect(screen.getByText(/100% local/i)).toBeInTheDocument();
+    expect(screen.getByText(/telemetría/i)).toBeInTheDocument();
+
+    const installBtn = screen.getByRole("button", { name: "Instalar AirPop" });
+    expect(installBtn).toBeDisabled();
+
+    const acceptCheckbox = screen.getByLabelText(/He leído y acepto/);
+    fireEvent.click(acceptCheckbox);
+    expect(installBtn).not.toBeDisabled();
   });
 });

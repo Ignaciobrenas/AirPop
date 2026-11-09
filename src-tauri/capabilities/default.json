@@ -1,13 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Least-privilege capabilities for AirPop popup and flyout overlay windows",
-  "windows": ["popup", "flyout"],
+  "description": "Least-privilege capabilities for AirPop popup, flyout and setup wizard windows",
+  "windows": ["popup", "flyout", "setup"],
   "permissions": [
     "core:default",
     "core:event:default",
     "core:window:allow-show",
     "core:window:allow-hide",
+    "core:window:allow-close",
+    "core:window:allow-center",
+    "core:window:allow-set-focus",
     "core:window:allow-set-ignore-cursor-events"
   ]
 }

@@ -27,6 +27,53 @@ pub const APP_VERSION: &str = "1.2.0";
 pub const TERMS_TEXT: &str = include_str!("../resources/TERMS.txt");
 
 #[cfg(windows)]
+pub fn is_setup_mode() -> bool {
+    let args: Vec<String> = env::args().collect();
+    let is_explicit_install = args.iter().any(|a| a == "--install" || a == "--setup");
+    let current_exe = env::current_exe().unwrap_or_default();
+    let file_stem = current_exe
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    let is_setup_name = file_stem.contains("setup") || file_stem.contains("installer");
+    let target_dir = get_target_install_dir();
+    let is_already_installed_location = current_exe
+        .parent()
+        .map(|p| p == target_dir.as_path())
+        .unwrap_or(false);
+
+    (is_explicit_install || is_setup_name) && !is_already_installed_location
+}
+
+#[cfg(target_os = "linux")]
+pub fn is_setup_mode() -> bool {
+    let args: Vec<String> = env::args().collect();
+    let is_explicit_install = args.iter().any(|a| a == "--install" || a == "--setup");
+    let current_exe = env::current_exe().unwrap_or_default();
+    let file_stem = current_exe
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    let is_setup_name = file_stem.contains("setup") || file_stem.contains("installer");
+    let target_dir = get_linux_target_bin_dir();
+    let is_already_installed = current_exe
+        .parent()
+        .map(|p| p == target_dir.as_path())
+        .unwrap_or(false);
+
+    (is_explicit_install || is_setup_name) && !is_already_installed
+}
+
+#[cfg(not(any(windows, target_os = "linux")))]
+pub fn is_setup_mode() -> bool {
+    false
+}
+
+#[cfg(windows)]
 pub fn handle_cli_installer_modes() -> bool {
     let args: Vec<String> = env::args().collect();
 
@@ -51,23 +98,9 @@ pub fn handle_cli_installer_modes() -> bool {
         return true;
     }
 
-    let is_explicit_install = args.iter().any(|a| a == "--install" || a == "--setup");
-    let current_exe = env::current_exe().unwrap_or_default();
-    let file_stem = current_exe
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("")
-        .to_lowercase();
-
-    let is_setup_name = file_stem.contains("setup") || file_stem.contains("installer");
-    let target_dir = get_target_install_dir();
-    let is_already_installed_location = current_exe
-        .parent()
-        .map(|p| p == target_dir.as_path())
-        .unwrap_or(false);
-
-    if (is_explicit_install || is_setup_name) && !is_already_installed_location {
-        let _ = run_installer(&current_exe, is_silent, accept_terms);
+    if is_setup_mode() && is_silent {
+        let current_exe = env::current_exe().unwrap_or_default();
+        let _ = run_installer(&current_exe, true, accept_terms);
         return true;
     }
 
@@ -99,23 +132,9 @@ pub fn handle_cli_installer_modes() -> bool {
         return true;
     }
 
-    let is_explicit_install = args.iter().any(|a| a == "--install" || a == "--setup");
-    let current_exe = env::current_exe().unwrap_or_default();
-    let file_stem = current_exe
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("")
-        .to_lowercase();
-
-    let is_setup_name = file_stem.contains("setup") || file_stem.contains("installer");
-    let target_dir = get_linux_target_bin_dir();
-    let is_already_installed = current_exe
-        .parent()
-        .map(|p| p == target_dir.as_path())
-        .unwrap_or(false);
-
-    if (is_explicit_install || is_setup_name) && !is_already_installed {
-        let _ = run_linux_installer(&current_exe, is_silent, accept_terms);
+    if is_setup_mode() && is_silent {
+        let current_exe = env::current_exe().unwrap_or_default();
+        let _ = run_linux_installer(&current_exe, true, accept_terms);
         return true;
     }
 
@@ -128,13 +147,13 @@ pub fn handle_cli_installer_modes() -> bool {
 }
 
 #[cfg(windows)]
-fn get_target_install_dir() -> PathBuf {
+pub fn get_target_install_dir() -> PathBuf {
     let local_app_data = env::var("LOCALAPPDATA").unwrap_or_else(|_| "C:\\".to_string());
     Path::new(&local_app_data).join("AirPop")
 }
 
 #[cfg(target_os = "linux")]
-fn get_linux_target_bin_dir() -> PathBuf {
+pub fn get_linux_target_bin_dir() -> PathBuf {
     let home = env::var("HOME").unwrap_or_else(|_| "/root".to_string());
     Path::new(&home).join(".local").join("bin")
 }
@@ -163,8 +182,199 @@ fn ask_yes_no(title: &str, text: &str) -> bool {
     }
 }
 
+pub fn install_files_and_shortcuts(
+    autostart: bool,
+    desktop_shortcut: bool,
+    start_menu_shortcut: bool,
+) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        let current_exe = env::current_exe().map_err(|e| e.to_string())?;
+        let target_dir = get_target_install_dir();
+        let target_exe = target_dir.join("airpop.exe");
+
+        fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
+
+        let current_pid = std::process::id();
+        let pid_filter = format!("PID ne {}", current_pid);
+        let _ = Command::new("taskkill")
+            .args(["/F", "/FI", &pid_filter, "/IM", "airpop.exe"])
+            .output();
+
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        fs::copy(&current_exe, &target_exe).map_err(|e| e.to_string())?;
+
+        let target_exe_str = target_exe.to_string_lossy().to_string();
+        let quoted_target = format!("\"{}\"", target_exe_str);
+
+        if autostart {
+            let _ = Command::new("reg")
+                .args([
+                    "add",
+                    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                    "/v",
+                    "AirPop",
+                    "/t",
+                    "REG_SZ",
+                    "/d",
+                    &quoted_target,
+                    "/f",
+                ])
+                .output();
+        }
+
+        let uninstall_key = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AirPop";
+        let _ = Command::new("reg")
+            .args([
+                "add",
+                uninstall_key,
+                "/v",
+                "DisplayName",
+                "/t",
+                "REG_SZ",
+                "/d",
+                "AirPop",
+                "/f",
+            ])
+            .output();
+        let _ = Command::new("reg")
+            .args([
+                "add",
+                uninstall_key,
+                "/v",
+                "DisplayVersion",
+                "/t",
+                "REG_SZ",
+                "/d",
+                APP_VERSION,
+                "/f",
+            ])
+            .output();
+        let _ = Command::new("reg")
+            .args([
+                "add",
+                uninstall_key,
+                "/v",
+                "Publisher",
+                "/t",
+                "REG_SZ",
+                "/d",
+                "Ignacio Brena",
+                "/f",
+            ])
+            .output();
+        let _ = Command::new("reg")
+            .args([
+                "add",
+                uninstall_key,
+                "/v",
+                "InstallLocation",
+                "/t",
+                "REG_SZ",
+                "/d",
+                &format!("\"{}\"", target_dir.to_string_lossy()),
+                "/f",
+            ])
+            .output();
+        let uninstall_cmd = format!("\"{}\" --uninstall", target_exe_str);
+        let _ = Command::new("reg")
+            .args([
+                "add",
+                uninstall_key,
+                "/v",
+                "UninstallString",
+                "/t",
+                "REG_SZ",
+                "/d",
+                &uninstall_cmd,
+                "/f",
+            ])
+            .output();
+        let icon_val = format!("\"{}\",0", target_exe_str);
+        let _ = Command::new("reg")
+            .args([
+                "add",
+                uninstall_key,
+                "/v",
+                "DisplayIcon",
+                "/t",
+                "REG_SZ",
+                "/d",
+                &icon_val,
+                "/f",
+            ])
+            .output();
+
+        if desktop_shortcut {
+            if let Ok(userprofile) = env::var("USERPROFILE") {
+                let desktop_lnk = Path::new(&userprofile).join("Desktop").join("AirPop.lnk");
+                create_shortcut(&desktop_lnk, &target_exe);
+            }
+        }
+
+        if start_menu_shortcut {
+            if let Ok(appdata) = env::var("APPDATA") {
+                let start_menu_lnk = Path::new(&appdata)
+                    .join("Microsoft")
+                    .join("Windows")
+                    .join("Start Menu")
+                    .join("Programs")
+                    .join("AirPop.lnk");
+                create_shortcut(&start_menu_lnk, &target_exe);
+            }
+        }
+
+        Ok(())
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let current_exe = env::current_exe().map_err(|e| e.to_string())?;
+        run_linux_installer(&current_exe, true, true)
+    }
+
+    #[cfg(not(any(windows, target_os = "linux")))]
+    {
+        Err("Unsupported operating system".to_string())
+    }
+}
+
+pub fn launch_installed_app() -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        let target_dir = get_target_install_dir();
+        let target_exe = target_dir.join("airpop.exe");
+        if !target_exe.exists() {
+            return Err("AirPop is not installed yet".to_string());
+        }
+        let _ = Command::new(&target_exe)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let target_dir = get_linux_target_bin_dir();
+        let target_exe = target_dir.join("airpop");
+        if !target_exe.exists() {
+            return Err("AirPop is not installed yet".to_string());
+        }
+        let _ = Command::new(&target_exe)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    #[cfg(not(any(windows, target_os = "linux")))]
+    {
+        Err("Unsupported operating system".to_string())
+    }
+}
+
 #[cfg(windows)]
-fn run_installer(current_exe: &Path, is_silent: bool, accept_terms: bool) -> Result<(), String> {
+fn run_installer(_current_exe: &Path, is_silent: bool, accept_terms: bool) -> Result<(), String> {
     if !is_silent && !accept_terms {
         let terms_prompt = format!(
             "Bienvenido al instalador de AirPop v{}.\n\n\
@@ -186,133 +396,10 @@ fn run_installer(current_exe: &Path, is_silent: bool, accept_terms: bool) -> Res
         }
     }
 
+    install_files_and_shortcuts(true, true, true)?;
+
     let target_dir = get_target_install_dir();
     let target_exe = target_dir.join("airpop.exe");
-
-    fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
-
-    let _ = Command::new("taskkill")
-        .args(["/F", "/IM", "airpop.exe"])
-        .output();
-
-    std::thread::sleep(std::time::Duration::from_millis(200));
-
-    fs::copy(current_exe, &target_exe).map_err(|e| e.to_string())?;
-
-    let target_exe_str = target_exe.to_string_lossy().to_string();
-    let quoted_target = format!("\\\"{}\\\"", target_exe_str);
-
-    let _ = Command::new("reg")
-        .args([
-            "add",
-            "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-            "/v",
-            "AirPop",
-            "/t",
-            "REG_SZ",
-            "/d",
-            &quoted_target,
-            "/f",
-        ])
-        .output();
-
-    let uninstall_key = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AirPop";
-    let _ = Command::new("reg")
-        .args([
-            "add",
-            uninstall_key,
-            "/v",
-            "DisplayName",
-            "/t",
-            "REG_SZ",
-            "/d",
-            "AirPop",
-            "/f",
-        ])
-        .output();
-    let _ = Command::new("reg")
-        .args([
-            "add",
-            uninstall_key,
-            "/v",
-            "DisplayVersion",
-            "/t",
-            "REG_SZ",
-            "/d",
-            APP_VERSION,
-            "/f",
-        ])
-        .output();
-    let _ = Command::new("reg")
-        .args([
-            "add",
-            uninstall_key,
-            "/v",
-            "Publisher",
-            "/t",
-            "REG_SZ",
-            "/d",
-            "Ignacio Brena",
-            "/f",
-        ])
-        .output();
-    let _ = Command::new("reg")
-        .args([
-            "add",
-            uninstall_key,
-            "/v",
-            "InstallLocation",
-            "/t",
-            "REG_SZ",
-            "/d",
-            &format!("\\\"{}\\\"", target_dir.to_string_lossy()),
-            "/f",
-        ])
-        .output();
-    let uninstall_cmd = format!("\\\"{}\\\" --uninstall", target_exe_str);
-    let _ = Command::new("reg")
-        .args([
-            "add",
-            uninstall_key,
-            "/v",
-            "UninstallString",
-            "/t",
-            "REG_SZ",
-            "/d",
-            &uninstall_cmd,
-            "/f",
-        ])
-        .output();
-    let icon_val = format!("\\\"{}\\\",0", target_exe_str);
-    let _ = Command::new("reg")
-        .args([
-            "add",
-            uninstall_key,
-            "/v",
-            "DisplayIcon",
-            "/t",
-            "REG_SZ",
-            "/d",
-            &icon_val,
-            "/f",
-        ])
-        .output();
-
-    if let Ok(userprofile) = env::var("USERPROFILE") {
-        let desktop_lnk = Path::new(&userprofile).join("Desktop").join("AirPop.lnk");
-        create_shortcut(&desktop_lnk, &target_exe);
-    }
-
-    if let Ok(appdata) = env::var("APPDATA") {
-        let start_menu_lnk = Path::new(&appdata)
-            .join("Microsoft")
-            .join("Windows")
-            .join("Start Menu")
-            .join("Programs")
-            .join("AirPop.lnk");
-        create_shortcut(&start_menu_lnk, &target_exe);
-    }
-
     let _ = Command::new(&target_exe).spawn();
 
     if !is_silent {
@@ -380,85 +467,97 @@ fn run_linux_installer(
     Ok(())
 }
 
-#[cfg(windows)]
-fn run_uninstaller(is_silent: bool) -> Result<(), String> {
-    if !is_silent {
-        let confirm = ask_yes_no(
-            "AirPop - Desinstalacion",
-            "¿Esta seguro de que desea desinstalar AirPop y eliminar sus accesos directos?",
-        );
-        if !confirm {
-            return Ok(());
+pub fn run_uninstaller(is_silent: bool) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        if !is_silent {
+            let confirm = ask_yes_no(
+                "AirPop - Desinstalacion",
+                "¿Esta seguro de que desea desinstalar AirPop y eliminar sus accesos directos?",
+            );
+            if !confirm {
+                return Ok(());
+            }
         }
-    }
 
-    let current_pid = std::process::id();
-    let pid_filter = format!("PID ne {}", current_pid);
-    let _ = Command::new("taskkill")
-        .args(["/F", "/FI", &pid_filter, "/IM", "airpop.exe"])
-        .output();
+        let current_pid = std::process::id();
+        let pid_filter = format!("PID ne {}", current_pid);
+        let _ = Command::new("taskkill")
+            .args(["/F", "/FI", &pid_filter, "/IM", "airpop.exe"])
+            .output();
 
-    let _ = Command::new("reg")
-        .args([
-            "delete",
-            "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-            "/v",
-            "AirPop",
-            "/f",
-        ])
-        .output();
+        let _ = Command::new("reg")
+            .args([
+                "delete",
+                "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                "/v",
+                "AirPop",
+                "/f",
+            ])
+            .output();
 
-    let _ = Command::new("reg")
-        .args([
-            "delete",
-            "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AirPop",
-            "/f",
-        ])
-        .output();
+        let _ = Command::new("reg")
+            .args([
+                "delete",
+                "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AirPop",
+                "/f",
+            ])
+            .output();
 
-    if let Ok(userprofile) = env::var("USERPROFILE") {
-        let desktop_lnk = Path::new(&userprofile).join("Desktop").join("AirPop.lnk");
-        let _ = fs::remove_file(desktop_lnk);
-    }
+        if let Ok(userprofile) = env::var("USERPROFILE") {
+            let desktop_lnk = Path::new(&userprofile).join("Desktop").join("AirPop.lnk");
+            let _ = fs::remove_file(desktop_lnk);
+        }
 
-    if let Ok(appdata) = env::var("APPDATA") {
-        let start_menu_lnk = Path::new(&appdata)
-            .join("Microsoft")
-            .join("Windows")
-            .join("Start Menu")
-            .join("Programs")
-            .join("AirPop.lnk");
-        let _ = fs::remove_file(start_menu_lnk);
-    }
+        if let Ok(appdata) = env::var("APPDATA") {
+            let start_menu_lnk = Path::new(&appdata)
+                .join("Microsoft")
+                .join("Windows")
+                .join("Start Menu")
+                .join("Programs")
+                .join("AirPop.lnk");
+            let _ = fs::remove_file(start_menu_lnk);
+        }
 
-    let target_dir = get_target_install_dir();
-    let target_dir_str = target_dir.to_string_lossy().to_string();
+        let target_dir = get_target_install_dir();
+        let target_dir_str = target_dir.to_string_lossy().to_string();
 
-    use std::os::windows::process::CommandExt;
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
-    let cleanup_cmd = format!(
-        "Start-Sleep -Milliseconds 600; Remove-Item -Recurse -Force '{}'",
-        target_dir_str
-    );
-    let _ = Command::new("powershell")
-        .args([
-            "-WindowStyle",
-            "Hidden",
-            "-NoProfile",
-            "-Command",
-            &cleanup_cmd,
-        ])
-        .creation_flags(CREATE_NO_WINDOW)
-        .spawn();
-
-    if !is_silent {
-        show_msg_box(
-            "AirPop - Desinstalacion finalizada",
-            "AirPop ha sido desinstalado correctamente de su sistema.",
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        let cleanup_cmd = format!(
+            "Start-Sleep -Milliseconds 600; Remove-Item -Recurse -Force '{}'",
+            target_dir_str
         );
+        let _ = Command::new("powershell")
+            .args([
+                "-WindowStyle",
+                "Hidden",
+                "-NoProfile",
+                "-Command",
+                &cleanup_cmd,
+            ])
+            .creation_flags(CREATE_NO_WINDOW)
+            .spawn();
+
+        if !is_silent {
+            show_msg_box(
+                "AirPop - Desinstalacion finalizada",
+                "AirPop ha sido desinstalado correctamente de su sistema.",
+            );
+        }
+
+        Ok(())
     }
 
-    Ok(())
+    #[cfg(target_os = "linux")]
+    {
+        run_linux_uninstaller(is_silent)
+    }
+
+    #[cfg(not(any(windows, target_os = "linux")))]
+    {
+        Ok(())
+    }
 }
 
 #[cfg(target_os = "linux")]

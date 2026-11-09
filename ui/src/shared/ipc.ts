@@ -23,7 +23,18 @@ export const IPC_COMMANDS = {
   GET_APO_STATUS: "get_apo_status",
   SYNC_APO_CONFIG: "sync_apo_config",
   SET_FORM_FACTOR: "set_form_factor",
+  INSTALL_APP: "install_app",
+  UNINSTALL_APP: "uninstall_app",
+  LAUNCH_INSTALLED_APP: "launch_installed_app",
+  GET_EULA_TEXT: "get_eula_text",
+  OPEN_TEST_POPUP: "open_test_popup",
 } as const;
+
+export interface InstallAppArgs {
+  autostart: boolean;
+  desktopShortcut: boolean;
+  startMenuShortcut: boolean;
+}
 
 export type FormFactor = "earbuds" | "over-ear";
 

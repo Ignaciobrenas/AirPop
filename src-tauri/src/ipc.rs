@@ -134,3 +134,11 @@ pub struct SetEqGainArgs {
 pub struct SelectEqPresetArgs {
     pub preset_id: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InstallAppArgs {
+    pub autostart: bool,
+    pub desktop_shortcut: bool,
+    pub start_menu_shortcut: bool,
+}

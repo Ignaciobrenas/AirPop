@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { BatteryRing } from "../popup/BatteryRing";
 import { getTranslation, SupportedLanguage } from "../shared/i18n";
 import { EarbudsGlyphIcon, HeadbandGlyphIcon } from "../shared/icons";
+import { invokeCommand, IPC_COMMANDS } from "../shared/ipc";
 import { resolveTransition } from "../shared/spring";
 import {
   findCatalogModel,
@@ -36,6 +37,9 @@ export const Flyout: React.FC = () => {
 
   const prefersReduced = useReducedMotion() ?? false;
   const t = getTranslation(language);
+
+  const [showEula, setShowEula] = useState<boolean>(false);
+  const [eulaText, setEulaText] = useState<string>("");
 
   const model = findCatalogModel(models, modelId);
   const colorHex = resolveColorHex(model, colorId);
@@ -493,6 +497,40 @@ export const Flyout: React.FC = () => {
                   style={{ accentColor: "var(--accent)" }}
                 />
               </label>
+
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: "12px",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                }}
+              >
+                <div>
+                  <span style={{ fontWeight: 500 }}>
+                    {t.settings.soundEnabled}
+                  </span>
+                  <p
+                    style={{
+                      fontSize: "10px",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    {t.settings.soundEnabledDesc}
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  aria-label={t.settings.soundEnabled}
+                  checked={settings.soundEnabled}
+                  onChange={(e) =>
+                    updateSettings({ soundEnabled: e.target.checked })
+                  }
+                  style={{ accentColor: "var(--accent)" }}
+                />
+              </label>
             </div>
 
             <motion.button
@@ -594,10 +632,155 @@ export const Flyout: React.FC = () => {
               >
                 ✓ {t.settings.termsAccepted}
               </span>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!eulaText) {
+                    void invokeCommand<string>(IPC_COMMANDS.GET_EULA_TEXT)
+                      .then((text) => setEulaText(text ?? ""))
+                      .catch(() => {});
+                  }
+                  setShowEula(true);
+                }}
+                className="airpop-control"
+                style={{
+                  marginTop: "var(--space-1)",
+                  padding: "6px var(--space-2)",
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  color: "var(--accent)",
+                  background: "transparent",
+                  border: "1px solid var(--surface-border)",
+                  borderRadius: "var(--radius-control)",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-sans)",
+                  textAlign: "center",
+                }}
+              >
+                {t.settings.viewTerms}
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  if (window.confirm(t.settings.uninstallConfirm)) {
+                    try {
+                      await invokeCommand<void>(IPC_COMMANDS.UNINSTALL_APP);
+                    } catch {}
+                  }
+                }}
+                style={{
+                  padding: "6px var(--space-2)",
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  color: "var(--danger)",
+                  background: "rgba(255, 69, 58, 0.08)",
+                  border: "1px solid rgba(255, 69, 58, 0.2)",
+                  borderRadius: "var(--radius-control)",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-sans)",
+                  textAlign: "center",
+                }}
+              >
+                {t.settings.uninstallApp}
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {showEula && (
+        <motion.div
+          initial={prefersReduced ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={resolveTransition("soft", prefersReduced)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(18, 20, 26, 0.95)",
+            backdropFilter: "blur(16px)",
+            zIndex: 100,
+            display: "flex",
+            flexDirection: "column",
+            padding: "var(--space-3)",
+            boxSizing: "border-box",
+            borderRadius: "var(--radius-panel)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "var(--space-2)",
+            }}
+          >
+            <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>
+              {t.installer.eulaTitle}
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowEula(false)}
+              aria-label={t.settings.closeTerms}
+              style={{
+                width: "24px",
+                height: "24px",
+                borderRadius: "50%",
+                background: "rgba(255, 255, 255, 0.1)",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "var(--text-secondary)",
+                fontSize: "12px",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label={t.installer.eulaTitle}
+            className="airpop-control"
+            style={{
+              flex: 1,
+              padding: "var(--space-3)",
+              borderRadius: "var(--radius-control)",
+              fontSize: "11px",
+              lineHeight: 1.45,
+              color: "var(--text-secondary)",
+              overflowY: "auto",
+              whiteSpace: "pre-wrap",
+              fontFamily: "var(--font-mono, monospace)",
+              background: "rgba(0, 0, 0, 0.3)",
+              border: "1px solid var(--surface-border)",
+            }}
+          >
+            {eulaText || "Cargando términos..."}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowEula(false)}
+            style={{
+              marginTop: "var(--space-2)",
+              padding: "8px",
+              fontSize: "12px",
+              fontWeight: 600,
+              color: "#ffffff",
+              background: "var(--accent)",
+              border: "none",
+              borderRadius: "var(--radius-control)",
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+            }}
+          >
+            {t.settings.closeTerms}
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 };
