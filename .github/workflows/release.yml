@@ -35,7 +35,8 @@ jobs:
           npm run build
       - name: Build Release Executables (.exe)
         run: |
-          cargo build --release --workspace
+          npx @tauri-apps/cli build --no-bundle
+          cargo build --release -p airpop --bin airpop-capture
       - name: Upload .exe Assets to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,7 +73,8 @@ jobs:
           npm run build
       - name: Build Release Executables
         run: |
-          cargo build --release --workspace
+          npx @tauri-apps/cli build --no-bundle
+          cargo build --release -p airpop --bin airpop-capture
       - name: Upload Linux Assets to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

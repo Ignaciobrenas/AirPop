@@ -1,0 +1,13 @@
+{
+  "name": "airpop",
+  "private": true,
+  "version": "1.2.0",
+  "description": "AirPop - Universal Wireless Audio Overlay & Equalizer",
+  "scripts": {
+    "dev": "npm --prefix ui run dev",
+    "build": "npm --prefix ui run build",
+    "lint": "npm --prefix ui run lint",
+    "test": "npm --prefix ui run test",
+    "tauri": "npm --prefix ui run tauri"
+  }
+}
