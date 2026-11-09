@@ -516,6 +516,85 @@ export const Flyout: React.FC = () => {
             >
               {t.settings.simulateTest}
             </motion.button>
+
+            <div
+              className="airpop-control"
+              style={{
+                padding: "var(--space-3)",
+                borderRadius: "var(--radius-control)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-2)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 600 }}>
+                  {t.settings.about}
+                </span>
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 500,
+                    padding: "2px 8px",
+                    borderRadius: "var(--radius-pill)",
+                    background: "var(--surface)",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  {t.settings.version}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-2)",
+                }}
+              >
+                <div
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "var(--ok)",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    color: "var(--ok)",
+                  }}
+                >
+                  {t.settings.privacyLocal}
+                </span>
+              </div>
+              <p
+                style={{
+                  fontSize: "10px",
+                  lineHeight: "1.4",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                {t.settings.privacyLocalDesc}
+              </p>
+              <span
+                style={{
+                  fontSize: "10px",
+                  color: "var(--text-secondary)",
+                  borderTop: "1px solid var(--surface-border)",
+                  paddingTop: "var(--space-1)",
+                }}
+              >
+                ✓ {t.settings.termsAccepted}
+              </span>
+            </div>
           </div>
         )}
       </div>
