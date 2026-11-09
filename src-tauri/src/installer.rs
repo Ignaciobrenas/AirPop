@@ -11,7 +11,7 @@ use std::process::Command;
 use windows::core::HSTRING;
 #[cfg(windows)]
 use windows::Win32::UI::WindowsAndMessaging::{
-    MessageBoxW, MB_ICONASTERISK, MB_ICONINFORMATION, MB_OK,
+    MessageBoxW, IDYES, MB_ICONASTERISK, MB_ICONINFORMATION, MB_ICONQUESTION, MB_OK, MB_YESNO,
 };
 
 #[cfg(target_os = "linux")]
@@ -23,12 +23,25 @@ use std::path::{Path, PathBuf};
 #[cfg(target_os = "linux")]
 use std::process::Command;
 
+pub const APP_VERSION: &str = "1.2.0";
+pub const TERMS_TEXT: &str = include_str!("../resources/TERMS.txt");
+
 #[cfg(windows)]
 pub fn handle_cli_installer_modes() -> bool {
     let args: Vec<String> = env::args().collect();
+
+    if args.iter().any(|a| a == "--terms" || a == "--license" || a == "-l") {
+        println!("{}", TERMS_TEXT);
+        return true;
+    }
+
     let is_silent = args
         .iter()
         .any(|a| a == "--silent" || a == "-s" || a == "--quiet");
+
+    let accept_terms = args
+        .iter()
+        .any(|a| a == "--accept-terms" || a == "--eula" || a == "-y" || a == "--yes");
 
     if args.iter().any(|a| a == "--uninstall") {
         let _ = run_uninstaller(is_silent);
@@ -51,7 +64,7 @@ pub fn handle_cli_installer_modes() -> bool {
         .unwrap_or(false);
 
     if (is_explicit_install || is_setup_name) && !is_already_installed_location {
-        let _ = run_installer(&current_exe, is_silent);
+        let _ = run_installer(&current_exe, is_silent, accept_terms);
         return true;
     }
 
@@ -61,9 +74,19 @@ pub fn handle_cli_installer_modes() -> bool {
 #[cfg(target_os = "linux")]
 pub fn handle_cli_installer_modes() -> bool {
     let args: Vec<String> = env::args().collect();
+
+    if args.iter().any(|a| a == "--terms" || a == "--license" || a == "-l") {
+        println!("{}", TERMS_TEXT);
+        return true;
+    }
+
     let is_silent = args
         .iter()
         .any(|a| a == "--silent" || a == "-s" || a == "--quiet");
+
+    let accept_terms = args
+        .iter()
+        .any(|a| a == "--accept-terms" || a == "--eula" || a == "-y" || a == "--yes");
 
     if args.iter().any(|a| a == "--uninstall") {
         let _ = run_linux_uninstaller(is_silent);
@@ -86,7 +109,7 @@ pub fn handle_cli_installer_modes() -> bool {
         .unwrap_or(false);
 
     if (is_explicit_install || is_setup_name) && !is_already_installed {
-        let _ = run_linux_installer(&current_exe, is_silent);
+        let _ = run_linux_installer(&current_exe, is_silent, accept_terms);
         return true;
     }
 
@@ -125,7 +148,43 @@ fn show_msg_box(title: &str, text: &str) {
 }
 
 #[cfg(windows)]
-fn run_installer(current_exe: &Path, is_silent: bool) -> Result<(), String> {
+fn ask_yes_no(title: &str, text: &str) -> bool {
+    let title_h = HSTRING::from(title);
+    let text_h = HSTRING::from(text);
+    unsafe {
+        let res = MessageBoxW(
+            None,
+            &text_h,
+            &title_h,
+            MB_YESNO | MB_ICONQUESTION,
+        );
+        res == IDYES
+    }
+}
+
+#[cfg(windows)]
+fn run_installer(current_exe: &Path, is_silent: bool, accept_terms: bool) -> Result<(), String> {
+    if !is_silent && !accept_terms {
+        let terms_prompt = format!(
+            "Bienvenido al instalador de AirPop v{}.\n\n\
+            AirPop es una aplicacion ligera y segura para auriculares Bluetooth en Windows.\n\n\
+            Garantias de Privacidad y Seguridad:\n\
+            • 100% Local: Sin conexion a servidores externos\n\
+            • Cero telemetria ni recopilacion de datos personales\n\
+            • Licencia libre y de codigo abierto (MIT)\n\n\
+            ¿Acepta los Terminos y Condiciones para continuar con la instalacion?",
+            APP_VERSION
+        );
+
+        if !ask_yes_no("AirPop - Terminos y Condiciones de Uso", &terms_prompt) {
+            show_msg_box(
+                "AirPop - Instalacion cancelada",
+                "La instalacion ha sido cancelada porque no se aceptaron los Terminos y Condiciones.",
+            );
+            return Err("Terms rejected".to_string());
+        }
+    }
+
     let target_dir = get_target_install_dir();
     let target_exe = target_dir.join("airpop.exe");
 
@@ -179,7 +238,7 @@ fn run_installer(current_exe: &Path, is_silent: bool) -> Result<(), String> {
             "/t",
             "REG_SZ",
             "/d",
-            "1.1.0",
+            APP_VERSION,
             "/f",
         ])
         .output();
@@ -257,8 +316,8 @@ fn run_installer(current_exe: &Path, is_silent: bool) -> Result<(), String> {
 
     if !is_silent {
         show_msg_box(
-            "AirPop - Instalacion completada",
-            "AirPop se ha instalado correctamente en su sistema y ya esta activo en la bandeja del sistema (al lado del reloj).\n\nSe iniciara de forma automatica cada vez que encienda su ordenador.",
+            "AirPop - Instalacion completada con exito",
+            "AirPop se ha instalado correctamente en su sistema y ya esta activo en la bandeja del sistema (junto al reloj).\n\nSe iniciara de forma automatica con Windows para detectar sus auriculares al conectarse.",
         );
     }
 
@@ -266,7 +325,13 @@ fn run_installer(current_exe: &Path, is_silent: bool) -> Result<(), String> {
 }
 
 #[cfg(target_os = "linux")]
-fn run_linux_installer(current_exe: &Path, is_silent: bool) -> Result<(), String> {
+fn run_linux_installer(current_exe: &Path, is_silent: bool, accept_terms: bool) -> Result<(), String> {
+    if !is_silent && !accept_terms {
+        println!("AirPop v{} - Términos y Condiciones", APP_VERSION);
+        println!("Al instalar acepta la licencia MIT y privacidad 100% local (sin telemetría).");
+        println!("Para aceptar ejecute con --accept-terms o presione Enter para continuar.");
+    }
+
     let home = env::var("HOME").map_err(|e| e.to_string())?;
     let home_path = Path::new(&home);
 
@@ -312,6 +377,16 @@ fn run_linux_installer(current_exe: &Path, is_silent: bool) -> Result<(), String
 
 #[cfg(windows)]
 fn run_uninstaller(is_silent: bool) -> Result<(), String> {
+    if !is_silent {
+        let confirm = ask_yes_no(
+            "AirPop - Desinstalacion",
+            "¿Esta seguro de que desea desinstalar AirPop y eliminar sus accesos directos?",
+        );
+        if !confirm {
+            return Ok(());
+        }
+    }
+
     let _ = Command::new("taskkill")
         .args(["/F", "/IM", "airpop.exe"])
         .output();
@@ -354,7 +429,7 @@ fn run_uninstaller(is_silent: bool) -> Result<(), String> {
 
     if !is_silent {
         show_msg_box(
-            "AirPop - Desinstalacion",
+            "AirPop - Desinstalacion finalizada",
             "AirPop ha sido desinstalado correctamente de su sistema.",
         );
     }
