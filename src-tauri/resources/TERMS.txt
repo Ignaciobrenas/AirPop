@@ -1,0 +1,74 @@
+================================================================================
+                    AIRPOP - TERMINOS Y CONDICIONES DE USO
+                       END USER LICENSE AGREEMENT (EULA)
+================================================================================
+
+Version: 1.2.0
+Fecha: Noviembre 2026
+
+[ESPANOL]
+
+1. ACEPTACION DE LOS TERMINOS
+Al instalar, copiar o utilizar AirPop ("el Software"), usted acepta quedar
+vinculado por los terminos de este acuerdo. Si no esta de acuerdo con estos
+terminos, no instale ni use el Software.
+
+2. LICENCIA DE USO
+AirPop es un software de codigo abierto publicado bajo la licencia MIT. Se le
+concede una licencia no exclusiva, gratuita y revocable para utilizar el Software
+en sus dispositivos compatibles con Windows y Linux.
+
+3. PRIVACIDAD Y SEGURIDAD (100% LOCAL)
+AirPop respeta totalmente su privacidad:
+- CERO telemetria: No se recopila ni envia ningun dato de uso o identificador.
+- CERO comunicacion externa: El software no se conecta a ningun servidor remoto.
+  Todas las funciones de conexion Bluetooth, deteccion y ecualizacion operan
+  exclusivamente en local dentro de su propio dispositivo.
+- No almacena datos personales ni credenciales de ningun tipo.
+
+4. AVISO LEGAL Y DESCARGO DE RESPONSABILIDAD DE MARCAS
+AirPop es un desarrollo independiente. "Apple", "AirPods", "Sony", "Bose",
+"Sennheiser", "Beats", "JBL", "Samsung", "Google", "Nothing", "Jabra" y otras
+marcas o modelos citados son marcas comerciales registradas de sus respectivos
+titulares. La mencion de estas marcas tiene como unico fin la compatibilidad
+tecnica e interoperabilidad con dispositivos Bluetooth estandar. AirPop no esta
+patrocinado, respaldado ni afiliado de ninguna manera con ninguna de estas entidades.
+
+5. EXCLUSION DE GARANTIA
+EL SOFTWARE SE PROPORCIONA "TAL CUAL" (AS IS), SIN GARANTIA DE NINGUN TIPO,
+EXPRESA O IMPLICITA. EN NINGUN CASO LOS AUTORES O TITULARES DEL COPYRIGHT
+SERAN RESPONSABLES DE NINGUNA RECLAMACION, DANO O RESPONSABILIDAD DIRECTA O
+INDIRECTA DERIVADA DEL USO DEL SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+[ENGLISH]
+
+1. ACCEPTANCE OF TERMS
+By installing, copying, or using AirPop ("the Software"), you agree to be bound
+by the terms of this agreement. If you do not agree, do not install or use it.
+
+2. GRANT OF LICENSE
+AirPop is open-source software licensed under the MIT License. You are granted a
+free, non-exclusive, revocable license to use the Software on your devices.
+
+3. PRIVACY & SECURITY (100% LOCAL)
+AirPop strictly protects your privacy:
+- ZERO Telemetry: No analytics, diagnostic, or tracking data is collected.
+- ZERO External Network Calls: The software operates entirely locally.
+  Bluetooth scanning, battery reporting, and audio equalization occur solely on
+  your device.
+- No personal data or user credentials are created or transmitted.
+
+4. TRADEMARK DISCLAIMER & NON-AFFILIATION
+AirPop is an independent product. "Apple", "AirPods", "Sony", "Bose",
+"Sennheiser", "Beats", "JBL", "Samsung", "Google", "Nothing", "Jabra", and
+related names are trademarks of their respective owners. Their mention is solely
+for compatibility identification under fair use. AirPop is not affiliated with,
+sponsored, or endorsed by any of these entities.
+
+5. WARRANTY DISCLAIMER
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+================================================================================

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "AirPop",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "identifier": "dev.ignacio.airpop",
   "build": {
     "beforeDevCommand": "npm --prefix ui run dev",
@@ -31,8 +31,8 @@
         "label": "flyout",
         "title": "AirPop Flyout",
         "url": "index.html#flyout",
-        "width": 360,
-        "height": 420,
+        "width": 380,
+        "height": 490,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
@@ -42,15 +42,29 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset: http://asset.localhost; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset:; connect-src 'self' ipc:; object-src 'none'; base-uri 'self'"
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["msi", "nsis"],
+    "targets": ["nsis", "msi"],
     "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
       "icons/icon.png",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "headerImage": "resources/nsis-header.bmp",
+        "sidebarImage": "resources/nsis-sidebar.bmp",
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico",
+        "installMode": "currentUser",
+        "languages": ["Spanish", "English"],
+        "displayLanguageSelector": true
+      }
+    }
   }
 }
