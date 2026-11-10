@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { ModelSilhouette } from "../shared/store";
@@ -14,6 +14,9 @@ export interface SceneProps {
   pointerX: number;
   pointerY: number;
   reducedMotion: boolean;
+  dragRotX?: number;
+  dragRotY?: number;
+  interactiveHint?: string;
 }
 
 interface SpringState {
@@ -46,15 +49,56 @@ export function disposeObject3D(root: THREE.Object3D): number {
     }
     if (mesh.material) {
       if (Array.isArray(mesh.material)) {
-        mesh.material.forEach((m) => m.dispose());
+        mesh.material.forEach((m) => {
+          const map = (m as THREE.MeshStandardMaterial).map;
+          if (map) map.dispose();
+          m.dispose();
+        });
         disposedCount += mesh.material.length;
       } else {
+        const map = (mesh.material as THREE.MeshStandardMaterial).map;
+        if (map) map.dispose();
         mesh.material.dispose();
         disposedCount += 1;
       }
     }
   });
   return disposedCount;
+}
+
+function createRoundedBoxGeometry(
+  width: number,
+  height: number,
+  radius: number,
+  depth: number,
+  bevel: number
+): THREE.ExtrudeGeometry {
+  const shape = new THREE.Shape();
+  const x = -width / 2;
+  const y = -height / 2;
+  const w = width;
+  const h = height;
+  const r = Math.min(radius, w / 2, h / 2);
+  shape.moveTo(x + r, y);
+  shape.lineTo(x + w - r, y);
+  shape.quadraticCurveTo(x + w, y, x + w, y + r);
+  shape.lineTo(x + w, y + h - r);
+  shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  shape.lineTo(x + r, y + h);
+  shape.quadraticCurveTo(x, y + h, x, y + h - r);
+  shape.lineTo(x, y + r);
+  shape.quadraticCurveTo(x, y, x + r, y);
+
+  const geom = new THREE.ExtrudeGeometry(shape, {
+    depth,
+    bevelEnabled: bevel > 0,
+    bevelSegments: 5,
+    steps: 1,
+    bevelSize: bevel,
+    bevelThickness: bevel,
+  });
+  geom.center();
+  return geom;
 }
 
 const GpuResourceLifecycle: React.FC = () => {
@@ -70,6 +114,53 @@ const GpuResourceLifecycle: React.FC = () => {
   return null;
 };
 
+const ContactShadow: React.FC<{
+  width?: number;
+  height?: number;
+  opacity?: number;
+  y?: number;
+}> = ({ width = 2.4, height = 1.4, opacity = 0.32, y = -0.74 }) => {
+  const texture = useMemo(() => {
+    if (typeof document === "undefined") return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gradient.addColorStop(0, "rgba(0, 0, 0, 0.7)");
+    gradient.addColorStop(0.35, "rgba(0, 0, 0, 0.36)");
+    gradient.addColorStop(0.75, "rgba(0, 0, 0, 0.1)");
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 128, 128);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    return tex;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (texture) texture.dispose();
+    };
+  }, [texture]);
+
+  if (!texture) return null;
+
+  return (
+    <mesh position={[0, y, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[width, height]} />
+      <meshBasicMaterial
+        map={texture}
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+};
+
 const OverEarHeadbandRig: React.FC<SceneProps> = ({
   silhouette = "over-ear-sculpted",
   colorHex,
@@ -78,6 +169,8 @@ const OverEarHeadbandRig: React.FC<SceneProps> = ({
   pointerX,
   pointerY,
   reducedMotion,
+  dragRotX = 0,
+  dragRotY = 0,
 }) => {
   const rootRef = useRef<THREE.Group>(null);
   const leftCupRef = useRef<THREE.Group>(null);
@@ -101,14 +194,17 @@ const OverEarHeadbandRig: React.FC<SceneProps> = ({
     const t = elapsedRef.current;
 
     if (rootRef.current) {
-      const targetRotY = pointerX * 0.24 + (reducedMotion ? 0 : Math.sin(t * 1.4) * 0.08);
+      const targetRotY =
+        pointerX * 0.24 +
+        (reducedMotion ? 0 : Math.sin(t * 1.4) * 0.08) +
+        (reducedMotion ? 0 : dragRotY);
       const nextRotY = reducedMotion
         ? targetRotY
         : stepSpring(rotYSpring.current, targetRotY, safeDelta, 180, 20);
       rootRef.current.rotation.y = nextRotY;
       rootRef.current.rotation.x = THREE.MathUtils.lerp(
         rootRef.current.rotation.x,
-        pointerY * 0.12,
+        pointerY * 0.12 + (reducedMotion ? 0 : dragRotX),
         0.12
       );
       rootRef.current.position.y = reducedMotion
@@ -131,62 +227,113 @@ const OverEarHeadbandRig: React.FC<SceneProps> = ({
 
   return (
     <group ref={rootRef} name="case_body" position={[0, -0.05, 0]}>
-      <mesh position={[0, 0.22, 0]} rotation={[0, 0, 0]}>
-        <torusGeometry args={[0.88, 0.095, 20, 48, Math.PI]} />
+      <mesh position={[0, 0.25, 0]} rotation={[0, 0, 0]}>
+        <torusGeometry args={[0.92, 0.052, 20, 64, Math.PI]} />
+        <meshStandardMaterial
+          color={accentHex}
+          roughness={0.2}
+          metalness={0.84}
+        />
+      </mesh>
+
+      <mesh position={[0, 0.23, 0]} rotation={[0, 0, 0]}>
+        <torusGeometry args={[0.87, 0.072, 18, 48, Math.PI * 0.74]} />
         <meshStandardMaterial
           color={colorHex}
-          roughness={0.35}
-          metalness={0.08}
+          roughness={0.74}
+          metalness={0.04}
         />
       </mesh>
 
-      <mesh position={[-0.86, 0.05, 0]} rotation={[0, 0, 0.08]}>
-        <cylinderGeometry args={[0.038, 0.038, 0.42, 16]} />
+      <mesh position={[-0.88, 0.04, 0]} rotation={[0, 0, 0.08]}>
+        <cylinderGeometry args={[0.038, 0.038, 0.44, 20]} />
         <meshStandardMaterial
           color={accentHex}
-          roughness={0.18}
-          metalness={0.78}
+          roughness={0.16}
+          metalness={0.85}
         />
       </mesh>
 
-      <mesh position={[0.86, 0.05, 0]} rotation={[0, 0, -0.08]}>
-        <cylinderGeometry args={[0.038, 0.038, 0.42, 16]} />
+      <mesh position={[-0.89, 0.22, 0]}>
+        <cylinderGeometry args={[0.052, 0.052, 0.06, 20]} />
         <meshStandardMaterial
           color={accentHex}
-          roughness={0.18}
-          metalness={0.78}
+          roughness={0.14}
+          metalness={0.9}
+        />
+      </mesh>
+
+      <mesh position={[0.88, 0.04, 0]} rotation={[0, 0, -0.08]}>
+        <cylinderGeometry args={[0.038, 0.038, 0.44, 20]} />
+        <meshStandardMaterial
+          color={accentHex}
+          roughness={0.16}
+          metalness={0.85}
+        />
+      </mesh>
+
+      <mesh position={[0.89, 0.22, 0]}>
+        <cylinderGeometry args={[0.052, 0.052, 0.06, 20]} />
+        <meshStandardMaterial
+          color={accentHex}
+          roughness={0.14}
+          metalness={0.9}
         />
       </mesh>
 
       <group
         ref={leftCupRef}
         name="bud_left"
-        position={[-0.82, -0.34, 0]}
+        position={[-0.84, -0.34, 0]}
         rotation={[0, 0.18, 0.22]}
       >
-        <mesh scale={isOval ? [0.62, 1.15, 0.86] : [0.68, 1.08, 0.82]}>
-          <sphereGeometry args={[0.42, 24, 24]} />
+        <mesh scale={isOval ? [0.64, 1.18, 0.88] : [0.7, 1.1, 0.84]}>
+          <sphereGeometry args={[0.42, 28, 28]} />
           <meshStandardMaterial
             color={colorHex}
-            roughness={isOval ? 0.22 : 0.34}
+            roughness={isOval ? 0.22 : 0.3}
             metalness={isOval ? 0.65 : 0.12}
           />
         </mesh>
         <mesh
+          position={[0.08, 0, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          scale={[0.84, 1.1, 0.9]}
+        >
+          <torusGeometry args={[0.34, 0.02, 16, 40]} />
+          <meshStandardMaterial
+            color={accentHex}
+            roughness={0.15}
+            metalness={0.85}
+          />
+        </mesh>
+        <mesh
           name="ear_cushions"
-          position={[0.14, 0, 0]}
+          position={[0.16, 0, 0]}
           rotation={[0, Math.PI / 2, 0]}
           scale={[0.82, 1.08, 0.9]}
         >
-          <torusGeometry args={[0.28, 0.095, 16, 32]} />
+          <torusGeometry args={[0.28, 0.098, 20, 36]} />
           <meshStandardMaterial
             color={accentHex}
-            roughness={0.62}
-            metalness={0.04}
+            roughness={0.68}
+            metalness={0.03}
+          />
+        </mesh>
+        <mesh
+          position={[0.18, 0, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          scale={[0.78, 1.02, 0.85]}
+        >
+          <circleGeometry args={[0.22, 24]} />
+          <meshStandardMaterial
+            color="#1c1e24"
+            roughness={0.5}
+            metalness={0.4}
           />
         </mesh>
         <mesh name="led" position={[-0.24, -0.22, 0.22]}>
-          <sphereGeometry args={[0.032, 12, 12]} />
+          <sphereGeometry args={[0.032, 14, 14]} />
           <meshStandardMaterial
             color={ledColor}
             emissive={ledColor}
@@ -198,30 +345,56 @@ const OverEarHeadbandRig: React.FC<SceneProps> = ({
       <group
         ref={rightCupRef}
         name="bud_right"
-        position={[0.82, -0.34, 0]}
+        position={[0.84, -0.34, 0]}
         rotation={[0, -0.18, -0.22]}
       >
-        <mesh scale={isOval ? [0.62, 1.15, 0.86] : [0.68, 1.08, 0.82]}>
-          <sphereGeometry args={[0.42, 24, 24]} />
+        <mesh scale={isOval ? [0.64, 1.18, 0.88] : [0.7, 1.1, 0.84]}>
+          <sphereGeometry args={[0.42, 28, 28]} />
           <meshStandardMaterial
             color={colorHex}
-            roughness={isOval ? 0.22 : 0.34}
+            roughness={isOval ? 0.22 : 0.3}
             metalness={isOval ? 0.65 : 0.12}
           />
         </mesh>
         <mesh
-          position={[-0.14, 0, 0]}
+          position={[-0.08, 0, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          scale={[0.84, 1.1, 0.9]}
+        >
+          <torusGeometry args={[0.34, 0.02, 16, 40]} />
+          <meshStandardMaterial
+            color={accentHex}
+            roughness={0.15}
+            metalness={0.85}
+          />
+        </mesh>
+        <mesh
+          position={[-0.16, 0, 0]}
           rotation={[0, Math.PI / 2, 0]}
           scale={[0.82, 1.08, 0.9]}
         >
-          <torusGeometry args={[0.28, 0.095, 16, 32]} />
+          <torusGeometry args={[0.28, 0.098, 20, 36]} />
           <meshStandardMaterial
             color={accentHex}
-            roughness={0.62}
-            metalness={0.04}
+            roughness={0.68}
+            metalness={0.03}
+          />
+        </mesh>
+        <mesh
+          position={[-0.18, 0, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          scale={[0.78, 1.02, 0.85]}
+        >
+          <circleGeometry args={[0.22, 24]} />
+          <meshStandardMaterial
+            color="#1c1e24"
+            roughness={0.5}
+            metalness={0.4}
           />
         </mesh>
       </group>
+
+      <ContactShadow width={2.5} height={1.5} opacity={0.3} y={-0.78} />
     </group>
   );
 };
@@ -235,6 +408,8 @@ const EarbudsRig: React.FC<SceneProps> = ({
   pointerX,
   pointerY,
   reducedMotion,
+  dragRotX = 0,
+  dragRotY = 0,
 }) => {
   const rootRef = useRef<THREE.Group>(null);
   const lidRef = useRef<THREE.Group>(null);
@@ -245,14 +420,31 @@ const EarbudsRig: React.FC<SceneProps> = ({
   const leftYSpring = useRef<SpringState>({ value: 0.1, velocity: 0 });
   const rightYSpring = useRef<SpringState>({ value: 0.1, velocity: 0 });
 
+  const isStemless = silhouette === "bud-in-ear";
+  const ledColor = lowBattery ? "#ffd60a" : "#30d158";
+
+  const caseBodyGeom = useMemo(() => {
+    return isStemless
+      ? createRoundedBoxGeometry(1.48, 0.72, 0.36, 0.54, 0.12)
+      : createRoundedBoxGeometry(1.36, 0.82, 0.36, 0.42, 0.12);
+  }, [isStemless]);
+
+  const caseLidGeom = useMemo(() => {
+    return isStemless
+      ? createRoundedBoxGeometry(1.48, 0.28, 0.36, 0.54, 0.12)
+      : createRoundedBoxGeometry(1.36, 0.32, 0.36, 0.42, 0.12);
+  }, [isStemless]);
+
   useEffect(() => {
     const group = rootRef.current;
     return () => {
       if (group) {
         disposeObject3D(group);
       }
+      caseBodyGeom.dispose();
+      caseLidGeom.dispose();
     };
-  }, []);
+  }, [caseBodyGeom, caseLidGeom]);
 
   useFrame((_, delta) => {
     const safeDelta = Math.min(delta, 0.1);
@@ -261,8 +453,9 @@ const EarbudsRig: React.FC<SceneProps> = ({
 
     if (rootRef.current) {
       const entryRotY = reducedMotion ? 0 : Math.max(0, 0.44 - t * 1.1);
-      const targetRotY = entryRotY + pointerX * 0.18;
-      const targetRotX = pointerY * 0.1;
+      const targetRotY =
+        entryRotY + pointerX * 0.18 + (reducedMotion ? 0 : dragRotY);
+      const targetRotX = pointerY * 0.1 + (reducedMotion ? 0 : dragRotX);
       rootRef.current.rotation.y = THREE.MathUtils.lerp(
         rootRef.current.rotation.y,
         targetRotY,
@@ -276,7 +469,7 @@ const EarbudsRig: React.FC<SceneProps> = ({
     }
 
     if (lidRef.current) {
-      const targetLid = lidOpen && t >= 0.18 ? -1.26 : 0;
+      const targetLid = lidOpen && t >= 0.18 ? -1.28 : 0;
       lidRef.current.rotation.x = reducedMotion
         ? targetLid
         : stepSpring(lidSpring.current, targetLid, safeDelta, 220, 20);
@@ -301,112 +494,285 @@ const EarbudsRig: React.FC<SceneProps> = ({
     }
   });
 
-  const isStemless = silhouette === "bud-in-ear";
-  const ledColor = lowBattery ? "#ffd60a" : "#30d158";
+  const hingeZ = isStemless ? -0.38 : -0.32;
+  const hingeY = isStemless ? 0.24 : 0.28;
 
   return (
-    <group ref={rootRef} position={[0, -0.26, 0]}>
+    <group ref={rootRef} position={[0, -0.24, 0]}>
       <mesh
         name="case_body"
         position={[0, -0.22, 0]}
-        scale={isStemless ? [1.12, 0.86, 1.08] : [1, 1, 1]}
+        geometry={caseBodyGeom}
         castShadow
         receiveShadow
       >
-        <boxGeometry args={[1.64, 1.06, 0.76]} />
         <meshStandardMaterial
           color={colorHex}
-          roughness={isStemless ? 0.36 : 0.2}
+          roughness={isStemless ? 0.32 : 0.18}
           metalness={0.08}
         />
       </mesh>
 
-      <mesh position={[0, 0.28, -0.38]}>
-        <boxGeometry args={[0.52, 0.07, 0.04]} />
+      <mesh position={[-0.42, 0.28, 0]}>
+        <cylinderGeometry args={[0.22, 0.19, 0.14, 24]} />
         <meshStandardMaterial
-          color={accentHex}
-          roughness={0.18}
-          metalness={0.82}
+          color="#16181f"
+          roughness={0.7}
+          metalness={0.25}
+        />
+      </mesh>
+      <mesh position={[-0.45, 0.24, 0]}>
+        <cylinderGeometry args={[0.016, 0.016, 0.05, 8]} />
+        <meshStandardMaterial
+          color="#e5a93b"
+          roughness={0.2}
+          metalness={0.92}
+        />
+      </mesh>
+      <mesh position={[-0.39, 0.24, 0]}>
+        <cylinderGeometry args={[0.016, 0.016, 0.05, 8]} />
+        <meshStandardMaterial
+          color="#e5a93b"
+          roughness={0.2}
+          metalness={0.92}
         />
       </mesh>
 
-      <group ref={lidRef} name="case_lid" position={[0, 0.31, -0.38]}>
+      <mesh position={[0.42, 0.28, 0]}>
+        <cylinderGeometry args={[0.22, 0.19, 0.14, 24]} />
+        <meshStandardMaterial
+          color="#16181f"
+          roughness={0.7}
+          metalness={0.25}
+        />
+      </mesh>
+      <mesh position={[0.39, 0.24, 0]}>
+        <cylinderGeometry args={[0.016, 0.016, 0.05, 8]} />
+        <meshStandardMaterial
+          color="#e5a93b"
+          roughness={0.2}
+          metalness={0.92}
+        />
+      </mesh>
+      <mesh position={[0.45, 0.24, 0]}>
+        <cylinderGeometry args={[0.016, 0.016, 0.05, 8]} />
+        <meshStandardMaterial
+          color="#e5a93b"
+          roughness={0.2}
+          metalness={0.92}
+        />
+      </mesh>
+
+      <mesh
+        position={[0, hingeY, hingeZ]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <cylinderGeometry args={[0.042, 0.042, 0.54, 24]} />
+        <meshStandardMaterial
+          color={accentHex}
+          roughness={0.16}
+          metalness={0.88}
+        />
+      </mesh>
+
+      <group ref={lidRef} name="case_lid" position={[0, hingeY, hingeZ]}>
         <mesh
-          position={[0, 0.21, 0.38]}
-          scale={isStemless ? [1.12, 0.88, 1.08] : [1, 1, 1]}
+          position={[0, 0.2, -hingeZ]}
+          geometry={caseLidGeom}
           castShadow
         >
-          <boxGeometry args={[1.64, 0.44, 0.76]} />
           <meshStandardMaterial
             color={colorHex}
-            roughness={isStemless ? 0.34 : 0.18}
+            roughness={isStemless ? 0.3 : 0.16}
             metalness={0.08}
           />
         </mesh>
       </group>
 
       <group ref={leftBudRef} name="bud_left" position={[-0.44, 0.1, 0]}>
-        <mesh scale={isStemless ? [1.15, 0.92, 1.25] : [1, 0.92, 1.15]} castShadow>
-          <sphereGeometry args={[0.25, 22, 22]} />
+        <mesh
+          scale={isStemless ? [1.12, 0.94, 1.22] : [1.02, 0.94, 1.12]}
+          castShadow
+        >
+          <sphereGeometry args={[0.24, 26, 26]} />
           <meshStandardMaterial
             color={colorHex}
-            roughness={0.18}
-            metalness={0.1}
+            roughness={0.16}
+            metalness={0.08}
           />
         </mesh>
+
+        <mesh
+          position={[0.13, 0.04, 0.13]}
+          rotation={[0.25, 0.35, 0]}
+        >
+          <cylinderGeometry args={[0.1, 0.16, 0.13, 24]} />
+          <meshStandardMaterial
+            color={colorHex}
+            roughness={0.65}
+            metalness={0.02}
+          />
+        </mesh>
+        <mesh
+          position={[0.18, 0.07, 0.21]}
+          rotation={[0.25, 0.35, 0]}
+        >
+          <circleGeometry args={[0.075, 16]} />
+          <meshStandardMaterial
+            color="#1e2026"
+            roughness={0.4}
+            metalness={0.7}
+          />
+        </mesh>
+
         {isStemless ? (
-          <mesh position={[-0.12, 0.08, 0.16]} rotation={[0.4, -0.3, 0]}>
-            <cylinderGeometry args={[0.14, 0.14, 0.05, 20]} />
-            <meshStandardMaterial
-              color={accentHex}
-              roughness={0.22}
-              metalness={0.76}
-            />
-          </mesh>
+          <group
+            position={[-0.12, 0.08, 0.16]}
+            rotation={[0.4, -0.3, 0]}
+          >
+            <mesh>
+              <cylinderGeometry args={[0.14, 0.14, 0.05, 24]} />
+              <meshStandardMaterial
+                color={accentHex}
+                roughness={0.2}
+                metalness={0.78}
+              />
+            </mesh>
+            <mesh position={[0, 0.026, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.135, 0.016, 16, 24]} />
+              <meshStandardMaterial
+                color="#e0e1e6"
+                roughness={0.14}
+                metalness={0.92}
+              />
+            </mesh>
+          </group>
         ) : (
-          <mesh position={[-0.05, -0.26, 0.04]} rotation={[0.12, 0, -0.14]}>
-            <cylinderGeometry args={[0.072, 0.062, 0.44, 16]} />
-            <meshStandardMaterial
-              color={colorHex}
-              roughness={0.2}
-              metalness={0.12}
-            />
-          </mesh>
+          <group
+            position={[-0.05, -0.26, 0.04]}
+            rotation={[0.12, 0, -0.14]}
+          >
+            <mesh>
+              <cylinderGeometry args={[0.062, 0.052, 0.44, 20]} />
+              <meshStandardMaterial
+                color={colorHex}
+                roughness={0.18}
+                metalness={0.1}
+              />
+            </mesh>
+            <mesh position={[0, -0.21, 0]}>
+              <cylinderGeometry args={[0.054, 0.054, 0.045, 20]} />
+              <meshStandardMaterial
+                color="#dcdfe6"
+                roughness={0.12}
+                metalness={0.95}
+              />
+            </mesh>
+            <mesh position={[-0.056, 0.02, 0]}>
+              <boxGeometry args={[0.015, 0.07, 0.02]} />
+              <meshStandardMaterial
+                color="#22242a"
+                roughness={0.5}
+                metalness={0.6}
+              />
+            </mesh>
+          </group>
         )}
       </group>
 
       <group ref={rightBudRef} name="bud_right" position={[0.44, 0.1, 0]}>
-        <mesh scale={isStemless ? [1.15, 0.92, 1.25] : [1, 0.92, 1.15]} castShadow>
-          <sphereGeometry args={[0.25, 22, 22]} />
+        <mesh
+          scale={isStemless ? [1.12, 0.94, 1.22] : [1.02, 0.94, 1.12]}
+          castShadow
+        >
+          <sphereGeometry args={[0.24, 26, 26]} />
           <meshStandardMaterial
             color={colorHex}
-            roughness={0.18}
-            metalness={0.1}
+            roughness={0.16}
+            metalness={0.08}
           />
         </mesh>
+
+        <mesh
+          position={[-0.13, 0.04, 0.13]}
+          rotation={[0.25, -0.35, 0]}
+        >
+          <cylinderGeometry args={[0.1, 0.16, 0.13, 24]} />
+          <meshStandardMaterial
+            color={colorHex}
+            roughness={0.65}
+            metalness={0.02}
+          />
+        </mesh>
+        <mesh
+          position={[-0.18, 0.07, 0.21]}
+          rotation={[0.25, -0.35, 0]}
+        >
+          <circleGeometry args={[0.075, 16]} />
+          <meshStandardMaterial
+            color="#1e2026"
+            roughness={0.4}
+            metalness={0.7}
+          />
+        </mesh>
+
         {isStemless ? (
-          <mesh position={[0.12, 0.08, 0.16]} rotation={[0.4, 0.3, 0]}>
-            <cylinderGeometry args={[0.14, 0.14, 0.05, 20]} />
-            <meshStandardMaterial
-              color={accentHex}
-              roughness={0.22}
-              metalness={0.76}
-            />
-          </mesh>
+          <group
+            position={[0.12, 0.08, 0.16]}
+            rotation={[0.4, 0.3, 0]}
+          >
+            <mesh>
+              <cylinderGeometry args={[0.14, 0.14, 0.05, 24]} />
+              <meshStandardMaterial
+                color={accentHex}
+                roughness={0.2}
+                metalness={0.78}
+              />
+            </mesh>
+            <mesh position={[0, 0.026, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.135, 0.016, 16, 24]} />
+              <meshStandardMaterial
+                color="#e0e1e6"
+                roughness={0.14}
+                metalness={0.92}
+              />
+            </mesh>
+          </group>
         ) : (
-          <mesh position={[0.05, -0.26, 0.04]} rotation={[0.12, 0, 0.14]}>
-            <cylinderGeometry args={[0.072, 0.062, 0.44, 16]} />
-            <meshStandardMaterial
-              color={colorHex}
-              roughness={0.2}
-              metalness={0.12}
-            />
-          </mesh>
+          <group
+            position={[0.05, -0.26, 0.04]}
+            rotation={[0.12, 0, 0.14]}
+          >
+            <mesh>
+              <cylinderGeometry args={[0.062, 0.052, 0.44, 20]} />
+              <meshStandardMaterial
+                color={colorHex}
+                roughness={0.18}
+                metalness={0.1}
+              />
+            </mesh>
+            <mesh position={[0, -0.21, 0]}>
+              <cylinderGeometry args={[0.054, 0.054, 0.045, 20]} />
+              <meshStandardMaterial
+                color="#dcdfe6"
+                roughness={0.12}
+                metalness={0.95}
+              />
+            </mesh>
+            <mesh position={[0.056, 0.02, 0]}>
+              <boxGeometry args={[0.015, 0.07, 0.02]} />
+              <meshStandardMaterial
+                color="#22242a"
+                roughness={0.5}
+                metalness={0.6}
+              />
+            </mesh>
+          </group>
         )}
       </group>
 
-      <mesh name="led" position={[0, -0.14, 0.39]}>
-        <sphereGeometry args={[0.045, 14, 14]} />
+      <mesh name="led" position={[0, -0.12, isStemless ? 0.44 : 0.38]}>
+        <sphereGeometry args={[0.04, 16, 16]} />
         <meshStandardMaterial
           color={ledColor}
           emissive={ledColor}
@@ -414,6 +780,8 @@ const EarbudsRig: React.FC<SceneProps> = ({
           roughness={0.1}
         />
       </mesh>
+
+      <ContactShadow width={2.2} height={1.3} opacity={0.34} y={-0.74} />
     </group>
   );
 };
@@ -447,21 +815,70 @@ export const Scene: React.FC<SceneProps> = (props) => {
     );
   }
 
+  const [dragAngle, setDragAngle] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
   const activeFrameloop = !pageVisible
     ? "never"
     : props.reducedMotion
     ? "demand"
     : "always";
 
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (props.reducedMotion) return;
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || props.reducedMotion) return;
+    const dx = (e.clientX - dragStartRef.current.x) * 0.015;
+    const dy = (e.clientY - dragStartRef.current.y) * 0.015;
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    setDragAngle((prev) => ({
+      x: Math.max(-0.65, Math.min(0.65, prev.x + dy)),
+      y: prev.y + dx,
+    }));
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const handleDoubleClick = () => {
+    setDragAngle({ x: 0, y: 0 });
+  };
+
   return (
     <div
       data-testid="popup-3d-scene"
-      style={{ width: "100%", height: "196px", position: "relative" }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onDoubleClick={handleDoubleClick}
+      title={props.interactiveHint ?? "Arrastra para rotar • Doble clic para centrar"}
+      style={{
+        width: "100%",
+        height: "196px",
+        position: "relative",
+        cursor: isDragging ? "grabbing" : "grab",
+      }}
     >
       <Canvas
         frameloop={activeFrameloop}
         dpr={[1, 1.5]}
-        camera={{ position: [0, 0.55, 3.35], fov: 38 }}
+        camera={{ position: [0, 0.48, 3.3], fov: 36 }}
         gl={{
           alpha: true,
           antialias: true,
@@ -471,23 +888,36 @@ export const Scene: React.FC<SceneProps> = (props) => {
         }}
       >
         <GpuResourceLifecycle />
-        <ambientLight intensity={0.68} />
-        <directionalLight position={[2.6, 3.8, 3.2]} intensity={1.4} />
+        <ambientLight intensity={0.72} />
+        <directionalLight position={[2.8, 4.0, 3.4]} intensity={1.6} />
         <directionalLight
-          position={[-2.4, 1.5, -2.0]}
-          intensity={0.58}
-          color="#38bdf8"
+          position={[-2.8, 2.0, -2.4]}
+          intensity={0.85}
+          color="#a5c8ff"
+        />
+        <directionalLight
+          position={[0, 3.2, -3.0]}
+          intensity={0.9}
+          color="#ffffff"
         />
         <pointLight
           position={[0, -0.14, 0.65]}
-          intensity={0.6}
+          intensity={0.65}
           distance={2.5}
           color="#30d158"
         />
         {props.kind === "over-ear" ? (
-          <OverEarHeadbandRig {...props} />
+          <OverEarHeadbandRig
+            {...props}
+            dragRotX={dragAngle.x}
+            dragRotY={dragAngle.y}
+          />
         ) : (
-          <EarbudsRig {...props} />
+          <EarbudsRig
+            {...props}
+            dragRotX={dragAngle.x}
+            dragRotY={dragAngle.y}
+          />
         )}
       </Canvas>
     </div>

@@ -7,12 +7,21 @@ export interface TranslationDictionary {
     equalizer: string;
     settings: string;
   };
+  window: {
+    minimize: string;
+    close: string;
+  };
+  scene: {
+    dragHint: string;
+  };
   status: {
     connected: string;
+    connectAction: string;
     standby: string;
     caseOpen: string;
     charging: string;
     batteryLow: string;
+    signal: string;
   };
   formFactor: {
     inEar: string;
@@ -30,6 +39,7 @@ export interface TranslationDictionary {
     level: string;
   };
   modes: {
+    listeningModeTitle: string;
     noiseCancellation: string;
     transparency: string;
     adaptive: string;
@@ -49,6 +59,7 @@ export interface TranslationDictionary {
     preamp: string;
     headroom: string;
     apoLinked: string;
+    apoDetected: string;
     apoNotInstalled: string;
     apoSync: string;
     apoSyncSuccess: string;
@@ -75,6 +86,7 @@ export interface TranslationDictionary {
   settings: {
     title: string;
     language: string;
+    selectColor: string;
     doNotDisturb: string;
     doNotDisturbDesc: string;
     lowPowerMode: string;
@@ -108,6 +120,7 @@ export interface TranslationDictionary {
     universalBt: string;
     apoSupport: string;
     eulaTitle: string;
+    eulaLoading: string;
     acceptCheckbox: string;
     optionsTitle: string;
     autostart: string;
@@ -130,12 +143,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       equalizer: "Ecualizador",
       settings: "Ajustes",
     },
+    window: {
+      minimize: "Minimizar",
+      close: "Cerrar",
+    },
+    scene: {
+      dragHint: "Arrastra para rotar · Doble clic para centrar",
+    },
     status: {
       connected: "Conectado",
+      connectAction: "Conectar",
       standby: "En espera",
       caseOpen: "Caja abierta",
       charging: "Cargando",
       batteryLow: "Batería baja",
+      signal: "Señal",
     },
     formFactor: {
       inEar: "In-Ear (Intraurales)",
@@ -153,6 +175,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       level: "Nivel de batería",
     },
     modes: {
+      listeningModeTitle: "Modo de escucha",
       noiseCancellation: "Cancelación de ruido",
       transparency: "Ambiente (Transparencia)",
       adaptive: "Audio adaptativo",
@@ -172,6 +195,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preamp: "Preamplificador",
       headroom: "Margen de seguridad contra distorsión",
       apoLinked: "Sincronizado con Equalizer APO",
+      apoDetected: "Equalizer APO detectado",
       apoNotInstalled: "Equalizer APO no detectado",
       apoSync: "Sincronizar APO",
       apoSyncSuccess: "Filtros aplicados al audio de Windows",
@@ -198,6 +222,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     settings: {
       title: "Configuración del Sistema",
       language: "Idioma",
+      selectColor: "Seleccionar color",
       doNotDisturb: "Modo No Molestar",
       doNotDisturbDesc: "Oculta el popup si hay un juego o app a pantalla completa",
       lowPowerMode: "Modo Bajo Consumo",
@@ -231,6 +256,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       universalBt: "Compatibilidad con auriculares universales",
       apoSupport: "Integración nativa con Equalizer APO",
       eulaTitle: "Términos y Condiciones de Uso (EULA)",
+      eulaLoading: "Cargando términos y condiciones...",
       acceptCheckbox: "He leído y acepto los Términos y Condiciones de Uso",
       optionsTitle: "Opciones de Instalación",
       autostart: "Iniciar AirPop automáticamente con Windows",
@@ -251,12 +277,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       equalizer: "Equalizer",
       settings: "Settings",
     },
+    window: {
+      minimize: "Minimize",
+      close: "Close",
+    },
+    scene: {
+      dragHint: "Drag to rotate · Double-click to center",
+    },
     status: {
       connected: "Connected",
+      connectAction: "Connect",
       standby: "Standby",
       caseOpen: "Case open",
       charging: "Charging",
       batteryLow: "Battery low",
+      signal: "Signal",
     },
     formFactor: {
       inEar: "In-Ear Earbuds",
@@ -274,6 +309,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       level: "Battery Level",
     },
     modes: {
+      listeningModeTitle: "Listening Mode",
       noiseCancellation: "Noise Cancellation",
       transparency: "Transparency",
       adaptive: "Adaptive Audio",
@@ -293,6 +329,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preamp: "Preamp Gain",
       headroom: "Clipping protection headroom",
       apoLinked: "Synchronized with Equalizer APO",
+      apoDetected: "Equalizer APO detected",
       apoNotInstalled: "Equalizer APO not detected",
       apoSync: "Sync to APO",
       apoSyncSuccess: "Filters applied to Windows audio stream",
@@ -319,6 +356,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     settings: {
       title: "System Settings",
       language: "Language",
+      selectColor: "Select color",
       doNotDisturb: "Do Not Disturb",
       doNotDisturbDesc: "Suppress popup when playing fullscreen games or apps",
       lowPowerMode: "Low Power Mode",
@@ -352,6 +390,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       universalBt: "Universal wireless earbuds & headphones support",
       apoSupport: "Native Equalizer APO parametric integration",
       eulaTitle: "End User License Agreement (EULA)",
+      eulaLoading: "Loading terms and conditions...",
       acceptCheckbox: "I have read and accept the Terms and Conditions of Use",
       optionsTitle: "Installation Options",
       autostart: "Launch AirPop automatically on Windows startup",
@@ -372,12 +411,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       equalizer: "Equalizador",
       settings: "Ajustes",
     },
+    window: {
+      minimize: "Minimizar",
+      close: "Fechar",
+    },
+    scene: {
+      dragHint: "Arraste para girar · Duplo clique para centralizar",
+    },
     status: {
       connected: "Conectado",
+      connectAction: "Conectar",
       standby: "Em espera",
       caseOpen: "Estojo aberto",
       charging: "Carregando",
       batteryLow: "Bateria fraca",
+      signal: "Sinal",
     },
     formFactor: {
       inEar: "Intra-auricular",
@@ -395,6 +443,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       level: "Nível de bateria",
     },
     modes: {
+      listeningModeTitle: "Modo de audição",
       noiseCancellation: "Cancelamento de ruído",
       transparency: "Transparência",
       adaptive: "Áudio adaptativo",
@@ -414,6 +463,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preamp: "Pré-amplificador",
       headroom: "Margem contra distorção",
       apoLinked: "Sincronizado com Equalizer APO",
+      apoDetected: "Equalizer APO detectado",
       apoNotInstalled: "Equalizer APO não detectado",
       apoSync: "Sincronizar APO",
       apoSyncSuccess: "Filtros aplicados ao áudio do Windows",
@@ -440,6 +490,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     settings: {
       title: "Configurações do Sistema",
       language: "Idioma",
+      selectColor: "Selecionar cor",
       doNotDisturb: "Não Perturbe",
       doNotDisturbDesc: "Ocultar popup durante jogos ou vídeos em tela cheia",
       lowPowerMode: "Economia de Energia",
@@ -473,6 +524,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       universalBt: "Compatibilidade universal com fones Bluetooth",
       apoSupport: "Integração nativa com Equalizer APO",
       eulaTitle: "Contrato de Licença (EULA)",
+      eulaLoading: "Carregando termos e condições...",
       acceptCheckbox: "Li e aceito os Termos e Condições de Uso",
       optionsTitle: "Opções de Instalação",
       autostart: "Iniciar AirPop automaticamente com o Windows",
@@ -493,12 +545,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       equalizer: "Égaliseur",
       settings: "Paramètres",
     },
+    window: {
+      minimize: "Réduire",
+      close: "Fermer",
+    },
+    scene: {
+      dragHint: "Faire glisser pour pivoter · Double-clic pour centrer",
+    },
     status: {
       connected: "Connecté",
+      connectAction: "Connecter",
       standby: "En veille",
       caseOpen: "Boîtier ouvert",
       charging: "En charge",
       batteryLow: "Batterie faible",
+      signal: "Signal",
     },
     formFactor: {
       inEar: "Écouteurs Intra",
@@ -516,6 +577,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       level: "Niveau de batterie",
     },
     modes: {
+      listeningModeTitle: "Mode d'écoute",
       noiseCancellation: "Réduction du bruit",
       transparency: "Transparence",
       adaptive: "Audio adaptatif",
@@ -535,6 +597,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preamp: "Préamplificateur",
       headroom: "Marge de protection contre l'écrêtage",
       apoLinked: "Synchronisé avec Equalizer APO",
+      apoDetected: "Equalizer APO détecté",
       apoNotInstalled: "Equalizer APO non détecté",
       apoSync: "Synchroniser APO",
       apoSyncSuccess: "Filtres appliqués au flux audio de Windows",
@@ -561,6 +624,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     settings: {
       title: "Paramètres Système",
       language: "Langue",
+      selectColor: "Sélectionner la couleur",
       doNotDisturb: "Ne pas déranger",
       doNotDisturbDesc: "Masquer le popup pendant les jeux plein écran",
       lowPowerMode: "Mode Économie",
@@ -594,6 +658,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       universalBt: "Compatibilité universelle écouteurs & casques",
       apoSupport: "Intégration paramétrique avec Equalizer APO",
       eulaTitle: "Contrat de Licence Utilisateur Final (EULA)",
+      eulaLoading: "Chargement des conditions d'utilisation...",
       acceptCheckbox: "J'ai lu et j'accepte les Conditions d'Utilisation",
       optionsTitle: "Options d'Installation",
       autostart: "Lancer AirPop automatiquement au démarrage de Windows",
@@ -614,12 +679,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       equalizer: "Equalizer",
       settings: "Einstellungen",
     },
+    window: {
+      minimize: "Minimieren",
+      close: "Schließen",
+    },
+    scene: {
+      dragHint: "Ziehen zum Drehen · Doppelklick zum Zentrieren",
+    },
     status: {
       connected: "Verbunden",
+      connectAction: "Verbinden",
       standby: "Standby",
       caseOpen: "Ladecase offen",
       charging: "Wird geladen",
       batteryLow: "Akku schwach",
+      signal: "Signal",
     },
     formFactor: {
       inEar: "In-Ear Kopfhörer",
@@ -637,6 +711,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       level: "Ladestand",
     },
     modes: {
+      listeningModeTitle: "Hör-Modus",
       noiseCancellation: "Geräuschunterdrückung",
       transparency: "Transparenz",
       adaptive: "Adaptiv",
@@ -656,6 +731,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       preamp: "Vorverstärker",
       headroom: "Clipping-Schutzreserve",
       apoLinked: "Mit Equalizer APO synchronisiert",
+      apoDetected: "Equalizer APO erkannt",
       apoNotInstalled: "Equalizer APO nicht installiert",
       apoSync: "APO synchronisieren",
       apoSyncSuccess: "Filter auf Windows-Audio angewendet",
@@ -682,6 +758,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     settings: {
       title: "Anwendungseinstellungen",
       language: "Sprache",
+      selectColor: "Farbe auswählen",
       doNotDisturb: "Nicht stören",
       doNotDisturbDesc: "Popup im Vollbildmodus unterdrücken",
       lowPowerMode: "Energiesparmodus",
@@ -715,6 +792,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       universalBt: "Universelle Unterstützung für Bluetooth-Kopfhörer",
       apoSupport: "Parametrische Integration mit Equalizer APO",
       eulaTitle: "Endbenutzer-Lizenzvereinbarung (EULA)",
+      eulaLoading: "Nutzungsbedingungen werden geladen...",
       acceptCheckbox: "Ich habe die Nutzungsbedingungen gelesen und akzeptiere sie",
       optionsTitle: "Installationsoptionen",
       autostart: "AirPop beim Windows-Start automatisch ausführen",

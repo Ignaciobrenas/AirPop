@@ -1,8 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { BatteryRing } from "../popup/BatteryRing";
 import { getTranslation, SupportedLanguage } from "../shared/i18n";
-import { EarbudsGlyphIcon, HeadbandGlyphIcon } from "../shared/icons";
+import {
+  CloseIcon,
+  EarbudsGlyphIcon,
+  HeadbandGlyphIcon,
+  SignalBarsIcon,
+} from "../shared/icons";
 import { invokeCommand, IPC_COMMANDS } from "../shared/ipc";
 import { resolveTransition } from "../shared/spring";
 import {
@@ -21,6 +26,7 @@ export const Flyout: React.FC = () => {
     colorId,
     battery,
     charging,
+    rssi,
     listeningMode,
     aapSupported,
     connected,
@@ -40,6 +46,27 @@ export const Flyout: React.FC = () => {
 
   const [showEula, setShowEula] = useState<boolean>(false);
   const [eulaText, setEulaText] = useState<string>("");
+  const [monitors, setMonitors] = useState<string[]>([]);
+
+  useEffect(() => {
+    void invokeCommand<string[]>(IPC_COMMANDS.GET_AVAILABLE_MONITORS)
+      .then((list) => {
+        if (Array.isArray(list)) {
+          setMonitors(list);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        void invokeCommand(IPC_COMMANDS.HIDE_FLYOUT);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const model = findCatalogModel(models, modelId);
   const colorHex = resolveColorHex(model, colorId);
@@ -64,54 +91,83 @@ export const Flyout: React.FC = () => {
       }}
     >
       <div
-        className="airpop-control"
         style={{
           display: "flex",
-          padding: "3px",
-          borderRadius: "var(--radius-pill)",
-          position: "relative",
-          background: "var(--surface-elevated)",
+          alignItems: "center",
+          gap: "var(--space-2)",
+          width: "100%",
         }}
       >
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                flex: 1,
-                padding: "6px 0",
-                fontSize: "12px",
-                fontWeight: isActive ? 600 : 500,
-                color: isActive ? "#ffffff" : "var(--text-secondary)",
-                background: "transparent",
-                border: "none",
-                borderRadius: "var(--radius-pill)",
-                cursor: "pointer",
-                position: "relative",
-                zIndex: 1,
-                fontFamily: "var(--font-sans)",
-              }}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="flyoutActiveTab"
-                  transition={resolveTransition("soft", prefersReduced)}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: "var(--radius-pill)",
-                    background: "var(--accent)",
-                    zIndex: -1,
-                  }}
-                />
-              )}
-              {tab.label}
-            </button>
-          );
-        })}
+        <div
+          className="airpop-control"
+          style={{
+            flex: 1,
+            display: "flex",
+            padding: "3px",
+            borderRadius: "var(--radius-pill)",
+            position: "relative",
+            background: "var(--surface-elevated)",
+          }}
+        >
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  flex: 1,
+                  padding: "6px 0",
+                  fontSize: "12px",
+                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? "#ffffff" : "var(--text-secondary)",
+                  background: "transparent",
+                  border: "none",
+                  borderRadius: "var(--radius-pill)",
+                  cursor: "pointer",
+                  position: "relative",
+                  zIndex: 1,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="flyoutActiveTab"
+                    transition={resolveTransition("soft", prefersReduced)}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "var(--radius-pill)",
+                      background: "var(--accent)",
+                      zIndex: -1,
+                    }}
+                  />
+                )}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          type="button"
+          aria-label={t.window.close}
+          title={t.window.close}
+          className="airpop-window-btn"
+          onClick={() => void invokeCommand(IPC_COMMANDS.HIDE_FLYOUT)}
+          style={{
+            width: "28px",
+            height: "28px",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 0,
+            flexShrink: 0,
+          }}
+        >
+          <CloseIcon size={12} />
+        </button>
       </div>
 
       <div
@@ -174,15 +230,42 @@ export const Flyout: React.FC = () => {
                   >
                     {deviceName}
                   </h1>
-                  <p
+                  <div
                     style={{
-                      fontSize: "11px",
-                      color: "var(--text-secondary)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--space-2)",
+                      marginTop: "2px",
                     }}
                   >
-                    {isOverEar ? t.formFactor.overEar : t.formFactor.inEar} ·{" "}
-                    {connected ? t.status.connected : t.status.standby}
-                  </p>
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--text-secondary)",
+                        margin: 0,
+                      }}
+                    >
+                      {isOverEar ? t.formFactor.overEar : t.formFactor.inEar} ·{" "}
+                      {connected ? t.status.connected : t.status.standby}
+                    </p>
+                    <span
+                      title={`${t.status.signal}: ${rssi} dBm`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "3px",
+                        fontSize: "10px",
+                        padding: "1px 6px",
+                        borderRadius: "var(--radius-pill)",
+                        background: "var(--surface-elevated)",
+                        border: "1px solid var(--surface-border)",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      <SignalBarsIcon size={11} rssi={rssi} />
+                      <span className="airpop-tabular">{rssi} dBm</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -229,30 +312,36 @@ export const Flyout: React.FC = () => {
                 }}
                 className="airpop-control"
                 style={{
-                  padding: "6px var(--space-2)",
-                  fontSize: "11px",
+                  padding: "7px 28px 7px 10px",
+                  fontSize: "12px",
+                  fontWeight: 500,
                   color: "var(--text-primary)",
                   fontFamily: "var(--font-sans)",
                 }}
               >
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.displayName} ({m.kind === "over-ear" ? "Diadema" : "In-Ear"})
+                    {m.displayName} (
+                    {m.kind === "over-ear"
+                      ? t.formFactor.headband
+                      : t.formFactor.earbuds}
+                    )
                   </option>
                 ))}
               </select>
 
               {model.colors.length > 1 && (
                 <select
-                  aria-label="Seleccionar color"
+                  aria-label={t.settings.selectColor}
                   value={colorId}
                   onChange={(e) =>
                     triggerSimulation(model.id, e.target.value, "case-open")
                   }
                   className="airpop-control"
                   style={{
-                    padding: "6px var(--space-2)",
-                    fontSize: "11px",
+                    padding: "7px 28px 7px 10px",
+                    fontSize: "12px",
+                    fontWeight: 500,
                     color: "var(--text-primary)",
                     fontFamily: "var(--font-sans)",
                   }}
@@ -370,8 +459,9 @@ export const Flyout: React.FC = () => {
                   }
                   className="airpop-control"
                   style={{
-                    padding: "4px 8px",
+                    padding: "6px 28px 6px 12px",
                     fontSize: "11px",
+                    fontWeight: 500,
                     color: "var(--text-primary)",
                     fontFamily: "var(--font-sans)",
                     borderRadius: "var(--radius-pill)",
@@ -382,6 +472,63 @@ export const Flyout: React.FC = () => {
                   <option value="pt">Português (PT)</option>
                   <option value="fr">Français (FR)</option>
                   <option value="de">Deutsch (DE)</option>
+                </select>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingTop: "var(--space-2)",
+                  borderTop: "1px solid var(--surface-border)",
+                }}
+              >
+                <div>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    Pantalla de popup
+                  </span>
+                  <p
+                    style={{
+                      fontSize: "10px",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    Monitor donde mostrar el popup
+                  </p>
+                </div>
+
+                <select
+                  value={settings.preferredMonitor ?? ""}
+                  aria-label="Pantalla de popup"
+                  onChange={(e) =>
+                    updateSettings({
+                      preferredMonitor: e.target.value || null,
+                    })
+                  }
+                  className="airpop-control"
+                  style={{
+                    padding: "6px 28px 6px 12px",
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    color: "var(--text-primary)",
+                    fontFamily: "var(--font-sans)",
+                    borderRadius: "var(--radius-pill)",
+                    maxWidth: "150px",
+                  }}
+                >
+                  <option value="">Automático</option>
+                  {monitors.map((m, idx) => (
+                    <option key={m} value={m}>
+                      {m.replace(/^\\\\.\\/, "") || `Monitor ${idx + 1}`}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -698,14 +845,16 @@ export const Flyout: React.FC = () => {
           style={{
             position: "absolute",
             inset: 0,
-            background: "rgba(18, 20, 26, 0.95)",
-            backdropFilter: "blur(16px)",
+            background: "var(--surface)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            border: "1px solid var(--surface-border)",
             zIndex: 100,
             display: "flex",
             flexDirection: "column",
             padding: "var(--space-3)",
             boxSizing: "border-box",
-            borderRadius: "var(--radius-panel)",
+            borderRadius: "var(--radius-card)",
           }}
         >
           <div
@@ -723,21 +872,17 @@ export const Flyout: React.FC = () => {
               type="button"
               onClick={() => setShowEula(false)}
               aria-label={t.settings.closeTerms}
+              className="airpop-window-btn"
               style={{
                 width: "24px",
                 height: "24px",
-                borderRadius: "50%",
-                background: "rgba(255, 255, 255, 0.1)",
-                border: "none",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                cursor: "pointer",
-                color: "var(--text-secondary)",
-                fontSize: "12px",
+                padding: 0,
               }}
             >
-              ✕
+              <CloseIcon size={11} />
             </button>
           </div>
           <div
@@ -755,7 +900,7 @@ export const Flyout: React.FC = () => {
               overflowY: "auto",
               whiteSpace: "pre-wrap",
               fontFamily: "var(--font-mono, monospace)",
-              background: "rgba(0, 0, 0, 0.3)",
+              background: "var(--surface-elevated)",
               border: "1px solid var(--surface-border)",
             }}
           >

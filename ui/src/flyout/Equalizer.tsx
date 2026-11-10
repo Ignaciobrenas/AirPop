@@ -152,7 +152,9 @@ export const Equalizer: React.FC = () => {
               background: eqProfile.enabled
                 ? "var(--accent)"
                 : "var(--surface-elevated)",
-              border: "1px solid var(--surface-border)",
+              border: eqProfile.enabled
+                ? "1px solid var(--accent)"
+                : "1px solid var(--surface-border)",
               borderRadius: "var(--radius-pill)",
               cursor: "pointer",
               fontFamily: "var(--font-sans)",
@@ -328,7 +330,9 @@ export const Equalizer: React.FC = () => {
                   background: isActive
                     ? "var(--accent)"
                     : "var(--surface-elevated)",
-                  border: "1px solid var(--surface-border)",
+                  border: isActive
+                    ? "1px solid var(--accent)"
+                    : "1px solid var(--surface-border)",
                   borderRadius: "var(--radius-pill)",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
@@ -378,7 +382,7 @@ export const Equalizer: React.FC = () => {
             {apoStatus.linked
               ? t.equalizer.apoLinked
               : apoStatus.installed
-              ? "Equalizer APO detectado"
+              ? t.equalizer.apoDetected
               : t.equalizer.apoNotInstalled}
           </span>
         </div>

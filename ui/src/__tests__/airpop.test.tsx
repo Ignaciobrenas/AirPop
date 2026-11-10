@@ -76,6 +76,25 @@ describe("AirPop Design System, Multi-Brand, EQ & Resource Suite", () => {
     expect(useAirPopStore.getState().popupMode).toBe("hidden");
   });
 
+  it("handles close and minimize window actions in popup dialog and pill", () => {
+    useAirPopStore.setState({ popupMode: "proximity" });
+    const { unmount } = render(<Popup />);
+
+    const minBtn = screen.getByRole("button", { name: "Minimizar" });
+    expect(minBtn).toBeInTheDocument();
+    fireEvent.click(minBtn);
+    expect(useAirPopStore.getState().popupMode).toBe("connected");
+
+    unmount();
+    useAirPopStore.setState({ popupMode: "proximity" });
+    render(<Popup />);
+
+    const closeBtn = screen.getByRole("button", { name: "Cerrar" });
+    expect(closeBtn).toBeInTheDocument();
+    fireEvent.click(closeBtn);
+    expect(useAirPopStore.getState().popupMode).toBe("hidden");
+  });
+
   it("detects and renders Over-Ear (Diadema) headphones for Sony WH-1000XM5 and Bose QC Ultra", () => {
     const models = useAirPopStore.getState().models;
     const xm5 = findCatalogModel(models, "sony-wh-1000xm5");
@@ -122,14 +141,17 @@ describe("AirPop Design System, Multi-Brand, EQ & Resource Suite", () => {
       />
     );
     expect(screen.getByRole("radiogroup")).toBeInTheDocument();
-    expect(screen.getByText("Adaptativo")).toBeInTheDocument();
+    expect(screen.getByText("Audio adaptativo")).toBeInTheDocument();
   });
 
-  it("renders Flyout with device, equalizer and settings tabs", () => {
+  it("renders Flyout with device, equalizer and settings tabs and supports close", () => {
     render(<Flyout />);
     expect(screen.getByText("Dispositivo")).toBeInTheDocument();
     expect(screen.getByText("Ecualizador")).toBeInTheDocument();
     expect(screen.getByText("Ajustes")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cerrar" })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Escape" });
 
     const eqTabBtn = screen.getByRole("button", { name: "Ecualizador" });
     fireEvent.click(eqTabBtn);
@@ -140,11 +162,15 @@ describe("AirPop Design System, Multi-Brand, EQ & Resource Suite", () => {
     fireEvent.click(settingsTabBtn);
     expect(screen.getByText(/Modo No Molestar/i)).toBeInTheDocument();
     expect(screen.getByText(/Modo Bajo Consumo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pantalla de popup/i)).toBeInTheDocument();
 
     const dndCheckbox = screen.getByLabelText(/Modo No Molestar/i) as HTMLInputElement;
     expect(dndCheckbox.checked).toBe(false);
     fireEvent.click(dndCheckbox);
     expect(useAirPopStore.getState().settings.doNotDisturb).toBe(true);
+
+    const monitorSelect = screen.getByLabelText(/Pantalla de popup/i) as HTMLSelectElement;
+    expect(monitorSelect).toBeInTheDocument();
   });
 
   it("renders SetupWizard with EULA acceptance and shortcut options", () => {

@@ -34,6 +34,33 @@ pub struct CliArgs {
 
     #[arg(long, default_value_t = false)]
     pub debug: bool,
+
+    #[arg(long, default_value_t = false)]
+    pub setup: bool,
+
+    #[arg(long, default_value_t = false)]
+    pub install: bool,
+
+    #[arg(long, short = 's', default_value_t = false)]
+    pub silent: bool,
+
+    #[arg(long, default_value_t = false)]
+    pub quiet: bool,
+
+    #[arg(long, short = 'y', default_value_t = false)]
+    pub accept_terms: bool,
+
+    #[arg(long, default_value_t = false)]
+    pub eula: bool,
+
+    #[arg(long, default_value_t = false)]
+    pub uninstall: bool,
+
+    #[arg(long, short = 'l', default_value_t = false)]
+    pub terms: bool,
+
+    #[arg(long, default_value_t = false)]
+    pub license: bool,
 }
 
 pub struct AppRuntimeState {
@@ -96,11 +123,26 @@ pub fn sanitize_settings(mut settings: AppSettings) -> AppSettings {
     settings
 }
 
-pub fn position_popup_bottom_center(window: &WebviewWindow) {
-    if let Ok(Some(monitor)) = window
-        .current_monitor()
-        .or_else(|_| window.primary_monitor())
-    {
+pub fn position_popup_bottom_center(window: &WebviewWindow, preferred_monitor: Option<&str>) {
+    let monitor = if let Some(pref) = preferred_monitor {
+        window
+            .available_monitors()
+            .ok()
+            .and_then(|list| {
+                list.into_iter()
+                    .find(|m| m.name().map(|n| n == pref).unwrap_or(false))
+            })
+            .or_else(|| window.current_monitor().ok().flatten())
+            .or_else(|| window.primary_monitor().ok().flatten())
+    } else {
+        window
+            .current_monitor()
+            .ok()
+            .flatten()
+            .or_else(|| window.primary_monitor().ok().flatten())
+    };
+
+    if let Some(monitor) = monitor {
         let screen_size = monitor.size();
         let screen_pos = monitor.position();
         let scale = monitor.scale_factor();
@@ -137,8 +179,13 @@ pub fn show_popup_overlay(app: &AppHandle) {
     if is_windows_fullscreen_busy() {
         return;
     }
+    let preferred = app.try_state::<Mutex<AppRuntimeState>>().and_then(|st| {
+        st.lock()
+            .ok()
+            .and_then(|g| g.settings.preferred_monitor.clone())
+    });
     if let Some(window) = app.get_webview_window("popup") {
-        position_popup_bottom_center(&window);
+        position_popup_bottom_center(&window, preferred.as_deref());
         let _ = window.set_ignore_cursor_events(false);
         let _ = window.show();
     }

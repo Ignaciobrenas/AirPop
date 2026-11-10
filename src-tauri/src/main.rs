@@ -24,7 +24,7 @@ fn main() {
         return;
     }
 
-    let cli = CliArgs::parse();
+    let cli = CliArgs::try_parse().unwrap_or_default();
     let is_simulated = cli.simulate.is_some();
 
     tauri::Builder::default()
@@ -39,6 +39,12 @@ fn main() {
         .setup(move |app| {
             if airpop_lib::installer::is_setup_mode() {
                 if let Some(setup_win) = app.get_webview_window("setup") {
+                    let app_h = app.handle().clone();
+                    setup_win.on_window_event(move |event| {
+                        if let tauri::WindowEvent::Destroyed = event {
+                            app_h.exit(0);
+                        }
+                    });
                     #[cfg(target_os = "windows")]
                     {
                         let _ = window_vibrancy::apply_mica(&setup_win, Some(true)).or_else(|_| {
@@ -58,6 +64,12 @@ fn main() {
                         window_vibrancy::apply_acrylic(&flyout_win, Some((18, 18, 22, 180)))
                     });
                 }
+                let f_win = flyout_win.clone();
+                flyout_win.on_window_event(move |event| {
+                    if let tauri::WindowEvent::Focused(false) = event {
+                        let _ = f_win.hide();
+                    }
+                });
             }
 
             let app_handle = app.handle().clone();
@@ -223,11 +235,7 @@ fn main() {
                             if flyout.is_visible().unwrap_or(false) {
                                 let _ = flyout.hide();
                             } else {
-                                if let tauri::Position::Physical(pos) = rect.position {
-                                    let x = (pos.x - 160).max(16);
-                                    let y = (pos.y - 436).max(16);
-                                    let _ = flyout.set_position(tauri::PhysicalPosition::new(x, y));
-                                }
+                                position_flyout_near_tray(&flyout, rect);
                                 let _ = flyout.show();
                                 let _ = flyout.set_focus();
                             }
@@ -259,6 +267,7 @@ fn main() {
             get_settings,
             set_settings,
             dismiss_popup,
+            hide_flyout,
             set_popup_cursor_passthrough,
             simulate,
             get_eq_presets,
@@ -271,8 +280,76 @@ fn main() {
             uninstall_app,
             launch_installed_app,
             get_eula_text,
-            open_test_popup
+            open_test_popup,
+            get_available_monitors
         ])
         .run(tauri::generate_context!())
         .expect("error while running AirPop tauri application");
+}
+
+fn position_flyout_near_tray(window: &tauri::WebviewWindow, tray_rect: tauri::Rect) {
+    let scale_factor = window.scale_factor().unwrap_or(1.0);
+    let win_size = window.outer_size().unwrap_or(tauri::PhysicalSize::new(
+        (380.0 * scale_factor) as u32,
+        (490.0 * scale_factor) as u32,
+    ));
+
+    let (tray_pos, tray_sz) = match (tray_rect.position, tray_rect.size) {
+        (tauri::Position::Physical(p), tauri::Size::Physical(s)) => (p, s),
+        (tauri::Position::Logical(p), tauri::Size::Logical(s)) => (
+            tauri::PhysicalPosition::new((p.x * scale_factor) as i32, (p.y * scale_factor) as i32),
+            tauri::PhysicalSize::new(
+                (s.width * scale_factor) as u32,
+                (s.height * scale_factor) as u32,
+            ),
+        ),
+        (tauri::Position::Physical(p), tauri::Size::Logical(s)) => (
+            p,
+            tauri::PhysicalSize::new(
+                (s.width * scale_factor) as u32,
+                (s.height * scale_factor) as u32,
+            ),
+        ),
+        (tauri::Position::Logical(p), tauri::Size::Physical(s)) => (
+            tauri::PhysicalPosition::new((p.x * scale_factor) as i32, (p.y * scale_factor) as i32),
+            s,
+        ),
+    };
+
+    let monitor = window
+        .current_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| window.primary_monitor().ok().flatten());
+
+    let (mon_x, mon_y, mon_w, mon_h) = if let Some(m) = monitor {
+        (
+            m.position().x,
+            m.position().y,
+            m.size().width as i32,
+            m.size().height as i32,
+        )
+    } else {
+        (0, 0, 1920, 1080)
+    };
+
+    let margin = (12.0 * scale_factor) as i32;
+
+    let target_x = (tray_pos.x + (tray_sz.width as i32 / 2)) - (win_size.width as i32 / 2);
+    let clamped_x = target_x.clamp(
+        mon_x + margin,
+        mon_x + mon_w - win_size.width as i32 - margin,
+    );
+
+    let target_y = if tray_pos.y > mon_y + (mon_h / 2) {
+        tray_pos.y - win_size.height as i32 - margin
+    } else {
+        tray_pos.y + tray_sz.height as i32 + margin
+    };
+    let clamped_y = target_y.clamp(
+        mon_y + margin,
+        mon_y + mon_h - win_size.height as i32 - margin,
+    );
+
+    let _ = window.set_position(tauri::PhysicalPosition::new(clamped_x, clamped_y));
 }

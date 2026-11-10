@@ -28,6 +28,8 @@ export const IPC_COMMANDS = {
   LAUNCH_INSTALLED_APP: "launch_installed_app",
   GET_EULA_TEXT: "get_eula_text",
   OPEN_TEST_POPUP: "open_test_popup",
+  GET_AVAILABLE_MONITORS: "get_available_monitors",
+  HIDE_FLYOUT: "hide_flyout",
 } as const;
 
 export interface InstallAppArgs {

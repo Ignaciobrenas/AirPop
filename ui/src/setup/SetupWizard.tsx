@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getTranslation, SupportedLanguage } from "../shared/i18n";
+import { CloseIcon } from "../shared/icons";
 import { invokeCommand, IPC_COMMANDS } from "../shared/ipc";
 import { resolveTransition } from "../shared/spring";
 import { useAirPopStore } from "../shared/store";
@@ -92,12 +93,9 @@ export const SetupWizard: React.FC = () => {
           height: "640px",
           display: "flex",
           flexDirection: "column",
-          borderRadius: "var(--radius-panel)",
-          border: "1px solid var(--surface-border)",
-          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+          borderRadius: "var(--radius-card)",
           boxSizing: "border-box",
           overflow: "hidden",
-          background: "linear-gradient(180deg, rgba(28, 30, 38, 0.95) 0%, rgba(18, 20, 26, 0.98) 100%)",
         }}
       >
         <div
@@ -108,7 +106,7 @@ export const SetupWizard: React.FC = () => {
             justifyContent: "space-between",
             padding: "var(--space-3) var(--space-4)",
             borderBottom: "1px solid var(--surface-border)",
-            background: "rgba(255, 255, 255, 0.02)",
+            background: "var(--surface-elevated)",
             cursor: "grab",
           }}
         >
@@ -140,8 +138,9 @@ export const SetupWizard: React.FC = () => {
               onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
               className="airpop-control"
               style={{
-                padding: "4px 8px",
+                padding: "6px 28px 6px 12px",
                 fontSize: "11px",
+                fontWeight: 500,
                 color: "var(--text-primary)",
                 fontFamily: "var(--font-sans)",
                 borderRadius: "var(--radius-pill)",
@@ -158,20 +157,17 @@ export const SetupWizard: React.FC = () => {
               type="button"
               onClick={handleClose}
               aria-label={t.installer.close}
+              className="airpop-window-btn"
               style={{
                 width: "26px",
                 height: "26px",
-                borderRadius: "50%",
-                background: "rgba(255, 255, 255, 0.08)",
-                border: "none",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                cursor: "pointer",
-                color: "var(--text-secondary)",
+                padding: 0,
               }}
             >
-              ✕
+              <CloseIcon size={12} />
             </button>
           </div>
         </div>
@@ -319,11 +315,11 @@ export const SetupWizard: React.FC = () => {
                   whiteSpace: "pre-wrap",
                   fontFamily: "var(--font-mono, monospace)",
                   maxHeight: "150px",
-                  background: "rgba(0, 0, 0, 0.25)",
+                  background: "var(--surface-elevated)",
                   border: "1px solid var(--surface-border)",
                 }}
               >
-                {eulaText || "Cargando términos y condiciones..."}
+                {eulaText || t.installer.eulaLoading}
               </div>
 
               <label
@@ -426,10 +422,10 @@ export const SetupWizard: React.FC = () => {
                   padding: "12px",
                   fontSize: "13px",
                   fontWeight: 600,
-                  color: "#ffffff",
-                  background: accepted ? "var(--accent)" : "rgba(255, 255, 255, 0.12)",
-                  opacity: accepted ? 1 : 0.6,
-                  border: "none",
+                  background: accepted ? "var(--accent)" : "var(--surface-elevated)",
+                  color: accepted ? "#ffffff" : "var(--text-secondary)",
+                  opacity: accepted ? 1 : 0.7,
+                  border: accepted ? "none" : "1px solid var(--surface-border)",
                   borderRadius: "var(--radius-pill)",
                   cursor: accepted ? "pointer" : "not-allowed",
                   fontFamily: "var(--font-sans)",

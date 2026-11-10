@@ -70,6 +70,13 @@ pub fn dismiss_popup(app: AppHandle, state: State<'_, Mutex<AppRuntimeState>>) {
 }
 
 #[tauri::command]
+pub fn hide_flyout(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("flyout") {
+        let _ = window.hide();
+    }
+}
+
+#[tauri::command]
 pub fn set_popup_cursor_passthrough(app: AppHandle, ignore: bool) {
     if let Some(window) = app.get_webview_window("popup") {
         let _ = window.set_ignore_cursor_events(ignore);
@@ -260,6 +267,23 @@ pub fn open_test_popup(
         SimulationScenario::CaseOpen,
     );
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_available_monitors(app: AppHandle) -> Vec<String> {
+    if let Some(window) = app
+        .get_webview_window("popup")
+        .or_else(|| app.get_webview_window("main"))
+    {
+        window
+            .available_monitors()
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|m| m.name().cloned())
+            .collect()
+    } else {
+        Vec::new()
+    }
 }
 
 #[cfg(test)]

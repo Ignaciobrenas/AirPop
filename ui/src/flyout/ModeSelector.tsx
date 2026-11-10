@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { getTranslation } from "../shared/i18n";
 import {
   AdaptiveModeIcon,
   NoiseCancellationIcon,
@@ -7,7 +8,9 @@ import {
   TransparencyModeIcon,
 } from "../shared/icons";
 import { ListeningMode } from "../shared/ipc";
+import { playModeSwitchTone } from "../shared/sound";
 import { resolveTransition } from "../shared/spring";
+import { useAirPopStore } from "../shared/store";
 
 export interface ModeSelectorProps {
   supportedModes: ListeningMode[];
@@ -15,13 +18,6 @@ export interface ModeSelectorProps {
   aapSupported: boolean;
   onSelect: (mode: ListeningMode) => void;
 }
-
-const MODE_LABELS: Record<ListeningMode, string> = {
-  "noise-cancellation": "Cancelación",
-  transparency: "Transparencia",
-  adaptive: "Adaptativo",
-  off: "Desactivado",
-};
 
 const ModeIcon: React.FC<{ mode: ListeningMode }> = ({ mode }) => {
   if (mode === "noise-cancellation") {
@@ -43,6 +39,21 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   onSelect,
 }) => {
   const prefersReducedMotion = Boolean(useReducedMotion());
+  const language = useAirPopStore((s) => s.language);
+  const t = getTranslation(language);
+
+  const getModeLabel = (mode: ListeningMode): string => {
+    switch (mode) {
+      case "noise-cancellation":
+        return t.modes.noiseCancellation;
+      case "transparency":
+        return t.modes.transparency;
+      case "adaptive":
+        return t.modes.adaptive;
+      case "off":
+        return t.modes.off;
+    }
+  };
 
   if (!aapSupported || supportedModes.length === 0) {
     return null;
@@ -51,7 +62,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   return (
     <div
       role="radiogroup"
-      aria-label="Modo de escucha"
+      aria-label={t.modes.listeningModeTitle}
       className="airpop-control"
       style={{
         display: "grid",
@@ -69,7 +80,15 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             type="button"
             role="radio"
             aria-checked={selected}
-            onClick={() => onSelect(mode)}
+            onClick={() => {
+              if (mode !== activeMode) {
+                playModeSwitchTone(
+                  useAirPopStore.getState().settings.soundEnabled,
+                  mode
+                );
+              }
+              onSelect(mode);
+            }}
             style={{
               position: "relative",
               border: "none",
@@ -104,7 +123,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               <ModeIcon mode={mode} />
             </span>
             <span style={{ position: "relative", zIndex: 1 }}>
-              {MODE_LABELS[mode]}
+              {getModeLabel(mode)}
             </span>
           </button>
         );

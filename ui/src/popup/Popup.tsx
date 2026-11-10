@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { getTranslation } from "../shared/i18n";
-import { EarbudsGlyphIcon, HeadbandGlyphIcon } from "../shared/icons";
+import {
+  CloseIcon,
+  EarbudsGlyphIcon,
+  HeadbandGlyphIcon,
+  MinimizeIcon,
+} from "../shared/icons";
 import { resolveTransition } from "../shared/spring";
 import {
   findCatalogModel,
@@ -128,26 +133,87 @@ export const Popup: React.FC = () => {
             }}
           >
             <div
-              className="airpop-control"
               style={{
-                display: "inline-flex",
+                width: "100%",
+                display: "flex",
                 alignItems: "center",
-                gap: "var(--space-2)",
-                padding: "var(--space-1) var(--space-3)",
-                fontSize: "11px",
-                fontWeight: 500,
-                color: "var(--text-secondary)",
-                borderRadius: "var(--radius-pill)",
+                justifyContent: "space-between",
               }}
             >
-              {isOverEar ? (
-                <HeadbandGlyphIcon size={14} />
-              ) : (
-                <EarbudsGlyphIcon size={14} />
-              )}
-              <span>
-                {isOverEar ? t.formFactor.overEar : t.formFactor.inEar}
-              </span>
+              <div
+                className="airpop-control"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "var(--space-2)",
+                  padding: "var(--space-1) var(--space-3)",
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                  borderRadius: "var(--radius-pill)",
+                }}
+              >
+                {isOverEar ? (
+                  <HeadbandGlyphIcon size={14} />
+                ) : (
+                  <EarbudsGlyphIcon size={14} />
+                )}
+                <span>
+                  {isOverEar ? t.formFactor.overEar : t.formFactor.inEar}
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-1)",
+                }}
+              >
+                <button
+                  type="button"
+                  aria-label={t.window.minimize}
+                  title={t.window.minimize}
+                  className="airpop-window-btn"
+                  onClick={() =>
+                    applyConnected({
+                      name: deviceName,
+                      modelId: model.id,
+                      color: colorId,
+                      battery,
+                      listeningMode,
+                      aapSupported: true,
+                    })
+                  }
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                  }}
+                >
+                  <MinimizeIcon size={12} />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t.window.close}
+                  title={t.window.close}
+                  className="airpop-window-btn"
+                  onClick={dismissPopup}
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                  }}
+                >
+                  <CloseIcon size={12} />
+                </button>
+              </div>
             </div>
 
             <Scene
@@ -161,6 +227,7 @@ export const Popup: React.FC = () => {
               pointerX={pointer.x}
               pointerY={pointer.y}
               reducedMotion={prefersReducedMotion}
+              interactiveHint={t.scene.dragHint}
             />
 
             <motion.div
@@ -238,7 +305,7 @@ export const Popup: React.FC = () => {
                   })
                 }
               >
-                {t.status.connected.startsWith("C") ? "Conectar" : "Connect"}
+                {t.status.connectAction}
               </button>
             </motion.div>
           </motion.div>
@@ -315,18 +382,60 @@ export const Popup: React.FC = () => {
                 </span>
               </div>
 
-              <span
-                className="airpop-control"
+              <div
                 style={{
-                  padding: "var(--space-1) var(--space-3)",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  color: "var(--text-secondary)",
-                  borderRadius: "var(--radius-pill)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-2)",
                 }}
               >
-                {listeningLabel}
-              </span>
+                <span
+                  className="airpop-control"
+                  style={{
+                    padding: "var(--space-1) var(--space-3)",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: "var(--text-secondary)",
+                    borderRadius: "var(--radius-pill)",
+                  }}
+                >
+                  {listeningLabel}
+                </span>
+                <button
+                  type="button"
+                  aria-label={t.window.minimize}
+                  title={t.window.minimize}
+                  className="airpop-window-btn"
+                  onClick={dismissPopup}
+                  style={{
+                    width: "22px",
+                    height: "22px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                  }}
+                >
+                  <MinimizeIcon size={11} />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t.window.close}
+                  title={t.window.close}
+                  className="airpop-window-btn"
+                  onClick={dismissPopup}
+                  style={{
+                    width: "22px",
+                    height: "22px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                  }}
+                >
+                  <CloseIcon size={11} />
+                </button>
+              </div>
             </div>
 
             <div

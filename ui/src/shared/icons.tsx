@@ -200,3 +200,103 @@ export const HeadbandGlyphIcon: React.FC<IconProps> = ({
     />
   </svg>
 );
+
+export const MinimizeIcon: React.FC<IconProps> = ({
+  size = 14,
+  color = "currentColor",
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    fill="none"
+    aria-hidden="true"
+  >
+    <line
+      x1="3"
+      y1="8"
+      x2="13"
+      y2="8"
+      stroke={color}
+      strokeWidth="1.75"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+export const CloseIcon: React.FC<IconProps> = ({
+  size = 14,
+  color = "currentColor",
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path
+      d="M4 4L12 12M12 4L4 12"
+      stroke={color}
+      strokeWidth="1.75"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+export interface SignalBarsIconProps extends IconProps {
+  rssi?: number;
+}
+
+export const SignalBarsIcon: React.FC<SignalBarsIconProps> = ({
+  size = 14,
+  rssi = -60,
+  className,
+}) => {
+  const bars =
+    rssi >= -55 ? 4 : rssi >= -68 ? 3 : rssi >= -80 ? 2 : rssi >= -92 ? 1 : 0;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect
+        x="2"
+        y="11"
+        width="2"
+        height="3"
+        rx="0.5"
+        fill={bars >= 1 ? "currentColor" : "var(--surface-border)"}
+      />
+      <rect
+        x="5.5"
+        y="8.5"
+        width="2"
+        height="5.5"
+        rx="0.5"
+        fill={bars >= 2 ? "currentColor" : "var(--surface-border)"}
+      />
+      <rect
+        x="9"
+        y="6"
+        width="2"
+        height="8"
+        rx="0.5"
+        fill={bars >= 3 ? "currentColor" : "var(--surface-border)"}
+      />
+      <rect
+        x="12.5"
+        y="3"
+        width="2"
+        height="11"
+        rx="0.5"
+        fill={bars >= 4 ? "currentColor" : "var(--surface-border)"}
+      />
+    </svg>
+  );
+};

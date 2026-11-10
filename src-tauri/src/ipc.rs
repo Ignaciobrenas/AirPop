@@ -14,6 +14,7 @@ pub const EVENT_DISCONNECTED: &str = "device://disconnected";
 pub const EVENT_SETTINGS: &str = "app://settings";
 pub const EVENT_EQ: &str = "device://eq";
 pub const EVENT_APO_STATUS: &str = "device://apo-status";
+pub const COMMAND_HIDE_FLYOUT: &str = "hide_flyout";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

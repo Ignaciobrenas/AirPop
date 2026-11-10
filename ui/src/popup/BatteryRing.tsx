@@ -97,7 +97,23 @@ export const BatteryRing: React.FC<BatteryRingProps> = ({
           >
             {percentage === null ? "—" : `${clamped}`}
           </span>
-          {charging && <ChargingBoltIcon size={11} ariaLabel="Cargando" />}
+          {charging && (
+            <motion.div
+              animate={
+                prefersReducedMotion
+                  ? false
+                  : { scale: [1, 1.18, 1], opacity: [0.85, 1, 0.85] }
+              }
+              transition={
+                prefersReducedMotion
+                  ? undefined
+                  : { repeat: Infinity, duration: 1.8, ease: "easeInOut" }
+              }
+              style={{ display: "inline-flex" }}
+            >
+              <ChargingBoltIcon size={11} ariaLabel="Cargando" />
+            </motion.div>
+          )}
         </div>
       </div>
 

@@ -134,3 +134,65 @@ export function playLowBatteryPing(enabled: boolean): void {
     return;
   }
 }
+
+export function playModeSwitchTone(enabled: boolean, mode: string): void {
+  if (!enabled || typeof window === "undefined") {
+    return;
+  }
+  const AudioCtx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+  if (!AudioCtx) {
+    return;
+  }
+
+  try {
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    if (mode === "noise-cancellation") {
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(320.0, now);
+      osc.frequency.exponentialRampToValueAtTime(180.0, now + 0.16);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.035, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    } else if (mode === "transparency") {
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.14);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.04, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    } else if (mode === "adaptive") {
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(440.0, now);
+      osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(554.37, now + 0.16);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.038, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    } else {
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(440.0, now);
+      osc.frequency.exponentialRampToValueAtTime(293.66, now + 0.12);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.03, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+    }
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
+
+    window.setTimeout(() => {
+      void ctx.close();
+    }, 250);
+  } catch {
+    return;
+  }
+}
