@@ -2,6 +2,18 @@
 
 All notable changes to **AirPop** are documented in this file.
 
+## [1.2.0] - 2026-11-10
+
+### Added
+- **Interactive Windows installer** with setup wizard, terms and conditions, audio chimes and settings controls.
+- **Standalone `uninstall.exe`** with registry integration.
+- **Taskbar flyout**: glassmorphism styling, close controls and DPI-aware positioning.
+- **Multi-language support** (ES/EN/PT/FR/DE), brand assets and security hardening.
+
+### Fixed
+- Uninstaller no longer kills its own process and removes files in a hidden background step.
+- Production builds are sanitized and the frontend is bundled self-contained.
+
 ## [1.1.0] - 2026-11-05
 
 ### Added

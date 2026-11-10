@@ -222,6 +222,10 @@ El ecualizador paramétrico incluye 16 perfiles calibrados:
 
 ---
 
+## 📥 Descarga
+
+Descarga el ejecutable de Windows (`airpop-windows-x64.exe`) desde la [última release](https://github.com/Ignaciobrenas/AirPop/releases/latest) y ejecútalo directamente.
+
 ## 🚀 Compilación y Desarrollo
 
 ### Requisitos
