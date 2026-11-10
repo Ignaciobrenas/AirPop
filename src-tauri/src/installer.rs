@@ -93,13 +93,19 @@ pub fn handle_cli_installer_modes() -> bool {
         .iter()
         .any(|a| a == "--accept-terms" || a == "--eula" || a == "-y" || a == "--yes");
 
-    if args.iter().any(|a| a == "--uninstall") {
+    let current_exe = env::current_exe().unwrap_or_default();
+    let file_stem = current_exe
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    if args.iter().any(|a| a == "--uninstall") || file_stem.contains("uninstall") {
         let _ = run_uninstaller(is_silent);
         return true;
     }
 
     if is_setup_mode() && is_silent {
-        let current_exe = env::current_exe().unwrap_or_default();
         let _ = run_installer(&current_exe, true, accept_terms);
         return true;
     }
@@ -205,6 +211,14 @@ pub fn install_files_and_shortcuts(
 
         fs::copy(&current_exe, &target_exe).map_err(|e| e.to_string())?;
 
+        let target_uninstaller = target_dir.join("uninstall.exe");
+        let source_uninstaller = current_exe.parent().map(|p| p.join("uninstall.exe"));
+        if let Some(src_uninst) = source_uninstaller.filter(|p| p.is_file()) {
+            let _ = fs::copy(&src_uninst, &target_uninstaller);
+        } else {
+            let _ = fs::copy(&current_exe, &target_uninstaller);
+        }
+
         let target_exe_str = target_exe.to_string_lossy().to_string();
         let quoted_target = format!("\"{}\"", target_exe_str);
 
@@ -277,7 +291,11 @@ pub fn install_files_and_shortcuts(
                 "/f",
             ])
             .output();
-        let uninstall_cmd = format!("\"{}\" --uninstall", target_exe_str);
+        let uninstall_cmd = if target_uninstaller.is_file() {
+            format!("\"{}\"", target_uninstaller.to_string_lossy())
+        } else {
+            format!("\"{}\" --uninstall", target_exe_str)
+        };
         let _ = Command::new("reg")
             .args([
                 "add",
@@ -322,6 +340,13 @@ pub fn install_files_and_shortcuts(
                     .join("Programs")
                     .join("AirPop.lnk");
                 create_shortcut(&start_menu_lnk, &target_exe);
+                let uninst_lnk = Path::new(&appdata)
+                    .join("Microsoft")
+                    .join("Windows")
+                    .join("Start Menu")
+                    .join("Programs")
+                    .join("Uninstall AirPop.lnk");
+                create_shortcut(&uninst_lnk, &target_uninstaller);
             }
         }
 
@@ -517,6 +542,13 @@ pub fn run_uninstaller(is_silent: bool) -> Result<(), String> {
                 .join("Programs")
                 .join("AirPop.lnk");
             let _ = fs::remove_file(start_menu_lnk);
+            let uninst_lnk = Path::new(&appdata)
+                .join("Microsoft")
+                .join("Windows")
+                .join("Start Menu")
+                .join("Programs")
+                .join("Uninstall AirPop.lnk");
+            let _ = fs::remove_file(uninst_lnk);
         }
 
         let target_dir = get_target_install_dir();

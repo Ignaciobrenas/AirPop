@@ -4,3 +4,6 @@ members = [
     "src-tauri",
     "tools/capture",
 ]
+
+[profile.test]
+opt-level = 3
